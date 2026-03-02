@@ -29,3 +29,6 @@ python Cleaner\cleaner.py --json
 
 - This module is **report-only**. You decide what to delete manually.
 - Run inside `.venv` through `kit.py` launcher for project consistency.
+
+
+Default portable root includes: `C:\Users\<YourUser>\Repos\Applications`

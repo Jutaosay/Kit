@@ -347,7 +347,12 @@ def main() -> int:
     portable_roots = [Path(p) for p in args.portable_root]
 
     # optional common portable hints
-    for hint in [Path.home() / "PortableApps", Path("D:/PortableApps")]:
+    default_portable_hints = [
+        Path.home() / "Repos" / "Applications",
+        Path.home() / "PortableApps",
+        Path("D:/PortableApps"),
+    ]
+    for hint in default_portable_hints:
         if hint.exists() and hint not in portable_roots:
             portable_roots.append(hint)
 
