@@ -25,3 +25,11 @@ python Autodark\autodark.py auto-preview
 - 当前自动策略仅做时间判断预览：
   - 19:00~06:59 推荐 dark
   - 07:00~18:59 推荐 light
+
+
+### Auto apply logic
+
+- Reads local time and timezone from the running system.
+- Uses local hour window to choose mode (`dark` or `light`).
+- Default expectation is UTC+8 (`--expected-utc-offset 8`).
+- If current theme already matches target, no change is applied unless `--force` is used.

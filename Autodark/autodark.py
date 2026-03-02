@@ -140,6 +140,39 @@ def cmd_auto_preview() -> int:
     return 0
 
 
+
+
+def cmd_auto_apply(dark_start: int, light_start: int, expected_utc_offset: float = 8.0, force: bool = False) -> int:
+    t = get_local_time_info()
+    mode = recommended_mode_by_time(t.now, dark_start=dark_start, light_start=light_start)
+
+    print(f"Local time : {t.now.strftime('%Y-%m-%d %H:%M:%S %z')}")
+    print(f"Timezone   : {t.tz_name} (UTC{t.utc_offset_hours:+.1f})")
+    print(f"Auto mode  : {mode} (dark_start={dark_start}, light_start={light_start})")
+
+    if abs(t.utc_offset_hours - expected_utc_offset) > 0.01:
+        print(
+            f"Warning    : current UTC offset is {t.utc_offset_hours:+.1f}, "
+            f"expected UTC{expected_utc_offset:+.1f}."
+        )
+
+    state = read_theme_state()
+    if "error" in state:
+        print(state["error"])
+        return 1
+
+    current = state["apps"]
+    print(f"Current    : {current}")
+
+    if (not force) and current == mode:
+        print("Action     : no change needed")
+        return 0
+
+    set_theme(mode)
+    print(f"Action     : theme switched to {mode}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Autodark: Windows theme switcher foundation")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -149,6 +182,17 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("dark", help="Switch to dark theme")
     sub.add_parser("toggle", help="Toggle light/dark theme")
     sub.add_parser("auto-preview", help="Preview auto mode by current local time")
+
+    auto_parser = sub.add_parser("auto", help="Apply auto mode by local time")
+    auto_parser.add_argument("--dark-start", type=int, default=19, help="Dark mode start hour (0-23)")
+    auto_parser.add_argument("--light-start", type=int, default=7, help="Light mode start hour (0-23)")
+    auto_parser.add_argument(
+        "--expected-utc-offset",
+        type=float,
+        default=8.0,
+        help="Expected local UTC offset, default UTC+8",
+    )
+    auto_parser.add_argument("--force", action="store_true", help="Force apply even if mode is already correct")
 
     return p
 
@@ -168,6 +212,13 @@ def main() -> int:
             return cmd_toggle()
         if args.cmd == "auto-preview":
             return cmd_auto_preview()
+        if args.cmd == "auto":
+            return cmd_auto_apply(
+                dark_start=args.dark_start,
+                light_start=args.light_start,
+                expected_utc_offset=args.expected_utc_offset,
+                force=args.force,
+            )
         parser.print_help()
         return 1
     except Exception as e:
