@@ -6,6 +6,7 @@ Windows 常用功能大合集（统一入口 + 模块化管理）。
 
 - `kit.py`：主程序入口（Rich 菜单）
 - `Monitor/`：已集成监控项目
+- `Autodark/`：Windows 主题切换基础模块
 - `modules/`：后续功能模块
 - `core/`：公共能力（日志、配置、工具函数）
 - `scripts/`：辅助脚本
@@ -35,7 +36,22 @@ python kit.py
 cd /d C:\Users\<你用户名>\Codings\Projects\Kit
 .\.venv\Scripts\activate.bat
 python -m py_compile kit.py
+python -m py_compile Autodark\main.py
 ```
+
+## Autodark（基础能力）
+
+```bat
+python Autodark\main.py status
+python Autodark\main.py auto-preview
+python Autodark\main.py light
+python Autodark\main.py dark
+python Autodark\main.py toggle
+```
+
+说明：
+- `status` 会读取本地时间与时区（UTC offset）并展示当前主题状态。
+- 当前自动策略仅做预览，为后续自动切换打基础。
 
 ## 规划建议
 

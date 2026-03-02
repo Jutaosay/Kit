@@ -1,0 +1,27 @@
+# Autodark
+
+Windows 主题切换基础模块（为后续自动切换打基础）。
+
+## 功能
+
+- 读取本地时间与时区（用于自动策略）
+- 读取当前 Windows 主题状态（app/system）
+- 切换浅色/深色主题
+- `auto-preview` 预览自动模式建议（不写入）
+
+## 命令
+
+```bat
+python Autodark\main.py status
+python Autodark\main.py light
+python Autodark\main.py dark
+python Autodark\main.py toggle
+python Autodark\main.py auto-preview
+```
+
+## 说明
+
+- 需要在 Windows 环境执行主题切换相关命令。
+- 当前自动策略仅做时间判断预览：
+  - 19:00~06:59 推荐 dark
+  - 07:00~18:59 推荐 light

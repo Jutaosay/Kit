@@ -29,11 +29,11 @@ def ensure_venv_or_exit() -> None:
     msg = (
         "[bold red]检测到当前不在虚拟环境中运行。[/bold red]\n\n"
         "为避免污染系统 Python，请先执行：\n"
-        "[cyan]python3 -m venv .venv[/cyan]\n"
-        "[cyan]source .venv/bin/activate[/cyan]\n"
+        "[cyan]python -m venv .venv[/cyan]\n"
+        "[cyan].\\.venv\\Scripts\\activate.bat[/cyan]\n"
         "[cyan]pip install -r requirements.txt[/cyan]\n\n"
         "然后再运行：\n"
-        "[cyan]python3 kit.py[/cyan]"
+        "[cyan]python kit.py[/cyan]"
     )
     console.print(Panel.fit(msg, title="Kit 环境检查", border_style="red"))
     raise SystemExit(1)
@@ -51,11 +51,24 @@ def run_monitor() -> int:
     return subprocess.call([sys.executable, str(app)], cwd=str(monitor_dir))
 
 
+
+
+def run_autodark() -> int:
+    autodark = ROOT / "Autodark" / "main.py"
+    if not autodark.exists():
+        console.print(f"[red]未找到 Autodark 入口文件：{autodark}[/red]")
+        return 1
+
+    console.print(Panel.fit("启动 Autodark 模块...", title="Kit", border_style="blue"))
+    console.print("[cyan]提示：在 Windows 上可执行 light/dark/toggle，当前先查看状态。[/cyan]")
+    return subprocess.call([sys.executable, str(autodark), "status"], cwd=str(ROOT))
+
 def menu() -> str:
     table = Table(title="Kit 模块菜单")
     table.add_column("选项", style="cyan", no_wrap=True)
     table.add_column("模块", style="magenta")
     table.add_row("1", "Monitor")
+    table.add_row("2", "Autodark（Windows 主题）")
     table.add_row("q", "退出")
     console.print(table)
     return console.input("[bold]> 请输入选项：[/bold]").strip().lower()
@@ -66,6 +79,7 @@ def main() -> int:
 
     actions: dict[str, Callable[[], int]] = {
         "1": run_monitor,
+        "2": run_autodark,
         "q": lambda: 0,
     }
 
