@@ -36,17 +36,17 @@ python kit.py
 cd /d C:\Users\<你用户名>\Codings\Projects\Kit
 .\.venv\Scripts\activate.bat
 python -m py_compile kit.py
-python -m py_compile Autodark\main.py
+python -m py_compile Autodark\autodark.py
 ```
 
 ## Autodark（基础能力）
 
 ```bat
-python Autodark\main.py status
-python Autodark\main.py auto-preview
-python Autodark\main.py light
-python Autodark\main.py dark
-python Autodark\main.py toggle
+python Autodark\autodark.py status
+python Autodark\autodark.py auto-preview
+python Autodark\autodark.py light
+python Autodark\autodark.py dark
+python Autodark\autodark.py toggle
 ```
 
 说明：

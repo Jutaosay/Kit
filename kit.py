@@ -41,7 +41,7 @@ def ensure_venv_or_exit() -> None:
 
 def run_monitor() -> int:
     monitor_dir = ROOT / "Monitor"
-    app = monitor_dir / "app.py"
+    app = monitor_dir / "monitor.py"
 
     if not app.exists():
         console.print(f"[red]未找到 Monitor 入口文件：{app}[/red]")
@@ -54,7 +54,7 @@ def run_monitor() -> int:
 
 
 def run_autodark() -> int:
-    autodark = ROOT / "Autodark" / "main.py"
+    autodark = ROOT / "Autodark" / "autodark.py"
     if not autodark.exists():
         console.print(f"[red]未找到 Autodark 入口文件：{autodark}[/red]")
         return 1

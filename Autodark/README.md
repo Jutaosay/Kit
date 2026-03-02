@@ -12,11 +12,11 @@ Windows 主题切换基础模块（为后续自动切换打基础）。
 ## 命令
 
 ```bat
-python Autodark\main.py status
-python Autodark\main.py light
-python Autodark\main.py dark
-python Autodark\main.py toggle
-python Autodark\main.py auto-preview
+python Autodark\autodark.py status
+python Autodark\autodark.py light
+python Autodark\autodark.py dark
+python Autodark\autodark.py toggle
+python Autodark\autodark.py auto-preview
 ```
 
 ## 说明

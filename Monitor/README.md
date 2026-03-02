@@ -22,24 +22,24 @@ Windows-only Python CLI that keeps your Downloads folder tidy: auto-organizes fi
 ### Quick Start
 ```bash
 # Run once (organize + optional installer cleanup + scan)
-python app.py
+python monitor.py
 
 # Verbose output
-python app.py --log-level INFO
+python monitor.py --log-level INFO
 
 # Continuous monitoring (default 2h interval)
-python app.py -c
-python app.py -c 3600   # custom interval in seconds
+python monitor.py -c
+python monitor.py -c 3600   # custom interval in seconds
 
 # Show system info
-python app.py --info
+python monitor.py --info
 
 # Duplicate cleanup suggestions
-python app.py --cleanup
+python monitor.py --cleanup
 
 # Installer cleanup (dry run / real)
-python app.py --clean-installers
-python app.py --clean-installers --no-dry-run
+python monitor.py --clean-installers
+python monitor.py --clean-installers --no-dry-run
 ```
 
 ### Command Line Options
@@ -107,20 +107,17 @@ python app.py --clean-installers --no-dry-run
 
 ### Project Structure
 ```
-app.py                # CLI entry, monitoring orchestration
+monitor.py            # CLI entry, monitoring orchestration
 file_monitor.py       # Scanning, SHA1, CSV persistence, progress tracker
 file_organizer.py     # File organization and empty-folder cleanup
 config_manager.py     # Config defaults, validation, helpers
 extensions.py         # Analytics extensions and duplicate detector
 installed_cleaner.py  # Installer cleanup via registry matching
 config.json           # User configuration
-start.bat             # Interactive launcher
-start_daily.bat       # Scheduled task launcher (logs to ./logs)
 ```
 
 ### Scheduling
-- For daily runs, use `start_daily.bat` in Windows Task Scheduler (Action: `cmd.exe /c "C:\path\to\start_daily.bat"`; Start in: repo path).
-- For always-on mode, use `python app.py -c 7200` in a long-running shell.
+- For always-on mode, use `python monitor.py -c 7200` in a long-running shell.
 
 ### Built-in Extensions
 - File Type Analyzer
@@ -177,24 +174,24 @@ MIT
 ### 快速开始
 ```bash
 # 单次运行（整理 + 可选的安装程序清理 + 扫描）
-python app.py
+python monitor.py
 
 # 详细输出
-python app.py --log-level INFO
+python monitor.py --log-level INFO
 
 # 持续监控（默认 2 小时间隔）
-python app.py -c
-python app.py -c 3600   # 自定义间隔（秒）
+python monitor.py -c
+python monitor.py -c 3600   # 自定义间隔（秒）
 
 # 显示系统信息
-python app.py --info
+python monitor.py --info
 
 # 重复文件清理建议
-python app.py --cleanup
+python monitor.py --cleanup
 
 # 安装程序清理（预览模式 / 实际删除）
-python app.py --clean-installers
-python app.py --clean-installers --no-dry-run
+python monitor.py --clean-installers
+python monitor.py --clean-installers --no-dry-run
 ```
 
 ### 命令行选项
@@ -269,13 +266,10 @@ config_manager.py     # 配置默认值、验证、辅助函数
 extensions.py         # 分析扩展和重复文件检测器
 installed_cleaner.py  # 通过注册表匹配进行安装程序清理
 config.json           # 用户配置文件
-start.bat             # 交互式启动器
-start_daily.bat       # 计划任务启动器（日志保存到 ./logs）
 ```
 
 ### 定时任务
-- 如需每日运行，在 Windows 任务计划程序中使用 `start_daily.bat`（操作：`cmd.exe /c "C:\path\to\start_daily.bat"`；起始于：项目路径）。
-- 如需持续运行，在长期运行的终端中使用 `python app.py -c 7200`。
+- 如需持续运行，在长期运行的终端中使用 `python monitor.py -c 7200`。
 
 ### 内置扩展
 - 文件类型分析器
