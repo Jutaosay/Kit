@@ -19,21 +19,22 @@ Windows 常用功能大合集（统一入口 + 模块化管理）。
 - 不在虚拟环境：直接退出并给出提示
 - 在虚拟环境：正常进入菜单
 
-## 使用方式（推荐）
+## 使用方式（推荐，Windows 10）
 
-```bash
-cd ~/Codings/Projects/Kit
-python3 -m venv .venv
-source .venv/bin/activate
+```bat
+cd /d C:\Users\<你用户名>\Codings\Projects\Kit
+python -m venv .venv
+.\.venv\Scripts\activate.bat
 pip install -r requirements.txt
-python3 kit.py
+python kit.py
 ```
 
 ## 测试方式（严格 venv）
 
-```bash
-cd ~/Codings/Projects/Kit
-scripts/test_in_venv.sh
+```bat
+cd /d C:\Users\<你用户名>\Codings\Projects\Kit
+.\.venv\Scripts\activate.bat
+python -m py_compile kit.py
 ```
 
 ## 规划建议
