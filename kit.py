@@ -27,51 +27,50 @@ def ensure_venv_or_exit() -> None:
         return
 
     msg = (
-        "[bold red]检测到当前不在虚拟环境中运行。[/bold red]\n\n"
-        "为避免污染系统 Python，请先执行：\n"
+        "[bold red]Virtual environment is required.[/bold red]\n\n"
+        "To avoid polluting system Python, run:\n"
         "[cyan]python -m venv .venv[/cyan]\n"
         "[cyan].\\.venv\\Scripts\\activate.bat[/cyan]\n"
         "[cyan]pip install -r requirements.txt[/cyan]\n\n"
-        "然后再运行：\n"
+        "Then run:\n"
         "[cyan]python kit.py[/cyan]"
     )
-    console.print(Panel.fit(msg, title="Kit 环境检查", border_style="red"))
+    console.print(Panel.fit(msg, title="Kit Environment Check", border_style="red"))
     raise SystemExit(1)
 
 
 def run_monitor() -> int:
     monitor_dir = ROOT / "Monitor"
-    app = monitor_dir / "monitor.py"
+    entry = monitor_dir / "monitor.py"
 
-    if not app.exists():
-        console.print(f"[red]未找到 Monitor 入口文件：{app}[/red]")
+    if not entry.exists():
+        console.print(f"[red]Monitor entry file not found: {entry}[/red]")
         return 1
 
-    console.print(Panel.fit("启动 Monitor 模块...", title="Kit", border_style="green"))
-    return subprocess.call([sys.executable, str(app)], cwd=str(monitor_dir))
-
-
+    console.print(Panel.fit("Starting Monitor module...", title="Kit", border_style="green"))
+    return subprocess.call([sys.executable, str(entry)], cwd=str(monitor_dir))
 
 
 def run_autodark() -> int:
-    autodark = ROOT / "Autodark" / "autodark.py"
-    if not autodark.exists():
-        console.print(f"[red]未找到 Autodark 入口文件：{autodark}[/red]")
+    entry = ROOT / "Autodark" / "autodark.py"
+    if not entry.exists():
+        console.print(f"[red]Autodark entry file not found: {entry}[/red]")
         return 1
 
-    console.print(Panel.fit("启动 Autodark 模块...", title="Kit", border_style="blue"))
-    console.print("[cyan]提示：在 Windows 上可执行 light/dark/toggle，当前先查看状态。[/cyan]")
-    return subprocess.call([sys.executable, str(autodark), "status"], cwd=str(ROOT))
+    console.print(Panel.fit("Starting Autodark module...", title="Kit", border_style="blue"))
+    console.print("[cyan]Tip: light/dark/toggle works on Windows. Running status now.[/cyan]")
+    return subprocess.call([sys.executable, str(entry), "status"], cwd=str(ROOT))
+
 
 def menu() -> str:
-    table = Table(title="Kit 模块菜单")
-    table.add_column("选项", style="cyan", no_wrap=True)
-    table.add_column("模块", style="magenta")
+    table = Table(title="Kit Modules")
+    table.add_column("Option", style="cyan", no_wrap=True)
+    table.add_column("Module", style="magenta")
     table.add_row("1", "Monitor")
-    table.add_row("2", "Autodark（Windows 主题）")
-    table.add_row("q", "退出")
+    table.add_row("2", "Autodark (Windows Theme)")
+    table.add_row("q", "Quit")
     console.print(table)
-    return console.input("[bold]> 请输入选项：[/bold]").strip().lower()
+    return console.input("[bold]> Select:[/bold] ").strip().lower()
 
 
 def main() -> int:
@@ -87,13 +86,14 @@ def main() -> int:
         choice = menu()
         action = actions.get(choice)
         if action is None:
-            console.print("[yellow]无效选项，请重试。[/yellow]")
+            console.print("[yellow]Invalid option. Please try again.[/yellow]")
             continue
+
         code = action()
         if choice == "q":
             return code
         if code != 0:
-            console.print(f"[red]模块退出码：{code}[/red]")
+            console.print(f"[red]Module exit code: {code}[/red]")
 
 
 if __name__ == "__main__":

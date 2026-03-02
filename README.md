@@ -1,45 +1,46 @@
 # Kit
 
-Windows 常用功能大合集（统一入口 + 模块化管理）。
+**EN (Primary)**
 
-## 当前结构
+Kit is a Windows-focused toolbox repository with a single launcher and modular structure.
+It is designed for daily utility workflows while keeping dependency isolation strict via `.venv`.
 
-- `kit.py`：主程序入口（Rich 菜单）
-- `Monitor/`：已集成监控项目
-- `Autodark/`：Windows 主题切换基础模块
-- `modules/`：后续功能模块
-- `core/`：公共能力（日志、配置、工具函数）
-- `scripts/`：辅助脚本
-- `docs/`：文档
-- `requirements.txt`：基础依赖
+## Structure
 
-## 强制虚拟环境策略（必须）
+- `kit.py`: main launcher (Rich menu)
+- `Monitor/`: file/download monitoring module
+- `Autodark/`: Windows theme switching foundation
+- `modules/`: future modules
+- `core/`: shared utilities
+- `scripts/`: helper scripts
+- `docs/`: documentation
+- `requirements.txt`: base dependencies
 
-`kit.py` 启动时会检查是否运行在 `.venv` 中：
+## Virtual Environment Policy (Mandatory)
 
-- 不在虚拟环境：直接退出并给出提示
-- 在虚拟环境：正常进入菜单
+`kit.py` refuses to run outside virtual environment.
 
-## 使用方式（推荐，Windows 10）
+## Recommended Usage (Windows 10)
 
 ```bat
-cd /d C:\Users\<你用户名>\Codings\Projects\Kit
+cd /d C:\Users\<YourUser>\Codings\Projects\Kit
 python -m venv .venv
 .\.venv\Scripts\activate.bat
 pip install -r requirements.txt
 python kit.py
 ```
 
-## 测试方式（严格 venv）
+## Strict Test (inside venv)
 
 ```bat
-cd /d C:\Users\<你用户名>\Codings\Projects\Kit
+cd /d C:\Users\<YourUser>\Codings\Projects\Kit
 .\.venv\Scripts\activate.bat
 python -m py_compile kit.py
 python -m py_compile Autodark\autodark.py
+python -m py_compile Monitor\monitor.py
 ```
 
-## Autodark（基础能力）
+## Autodark Commands
 
 ```bat
 python Autodark\autodark.py status
@@ -49,12 +50,30 @@ python Autodark\autodark.py dark
 python Autodark\autodark.py toggle
 ```
 
-说明：
-- `status` 会读取本地时间与时区（UTC offset）并展示当前主题状态。
-- 当前自动策略仅做预览，为后续自动切换打基础。
+---
 
-## 规划建议
+**中文（次要）**
 
-1. 每个模块单独目录（含 README 与入口）
-2. `kit.py` 只做路由分发，不堆业务逻辑
-3. 公共配置集中到 `core/`，减少重复代码
+Kit 是一个面向 Windows 的常用功能合集，采用统一入口 + 模块化结构。
+核心原则是：所有运行与测试都必须在 `.venv` 中进行，避免污染系统 Python 环境。
+
+## 目录说明
+
+- `kit.py`：主程序入口（Rich 菜单）
+- `Monitor/`：文件/下载监控模块
+- `Autodark/`：Windows 主题切换基础模块
+- `modules/`：后续扩展模块
+- `core/`：公共能力
+- `scripts/`：辅助脚本
+- `docs/`：文档
+
+## 运行要求
+
+- 必须在虚拟环境 `.venv` 中运行
+- 非虚拟环境会被 `kit.py` 拒绝执行
+
+## 建议
+
+1. 子模块入口文件统一按功能命名（如 `monitor.py`、`autodark.py`）
+2. Launcher 只做路由与调度，不堆业务逻辑
+3. 公共配置与工具沉淀到 `core/`

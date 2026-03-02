@@ -42,7 +42,7 @@ def _open_personalize_key(write: bool = False):
 
 def read_theme_state() -> dict:
     if not IS_WINDOWS:
-        return {"error": "当前不是 Windows 环境，无法读取主题注册表。"}
+        return {"error": "Non-Windows environment. Theme registry is unavailable."}
 
     with _open_personalize_key(write=False) as key:
         app_val, _ = winreg.QueryValueEx(key, APP_KEY)
@@ -56,7 +56,7 @@ def read_theme_state() -> dict:
 
 
 def _broadcast_theme_change() -> None:
-    # 通知系统设置变更，尽量即时生效
+    # Notify Windows that theme settings changed for faster UI refresh.
     HWND_BROADCAST = 0xFFFF
     WM_SETTINGCHANGE = 0x001A
     SMTO_ABORTIFHUNG = 0x0002
@@ -73,10 +73,10 @@ def _broadcast_theme_change() -> None:
 
 def set_theme(mode: str, apply_apps: bool = True, apply_system: bool = True) -> None:
     if not IS_WINDOWS:
-        raise RuntimeError("当前不是 Windows 环境，无法写入主题注册表。")
+        raise RuntimeError("Non-Windows environment. Unable to write theme registry.")
 
     if mode not in {"light", "dark"}:
-        raise ValueError("mode 仅支持 light/dark")
+        raise ValueError("mode must be 'light' or 'dark'")
 
     value = 1 if mode == "light" else 0
     with _open_personalize_key(write=True) as key:
@@ -125,7 +125,7 @@ def cmd_toggle() -> int:
     if "error" in state:
         print(state["error"])
         return 1
-    # 以 app 主题为主判断
+
     target = "dark" if state["apps"] == "light" else "light"
     return cmd_set(target)
 
@@ -136,19 +136,19 @@ def cmd_auto_preview() -> int:
     print(f"Local time : {t.now.strftime('%Y-%m-%d %H:%M:%S %z')}")
     print(f"Timezone   : {t.tz_name} (UTC{t.utc_offset_hours:+.1f})")
     print(f"Auto mode  : {mode}")
-    print("(仅预览，不修改主题)")
+    print("(Preview only. No registry changes.)")
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Windows 主题切换工具（Autodark 基础版）")
+    p = argparse.ArgumentParser(description="Autodark: Windows theme switcher foundation")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("status", help="查看当前本地时间/时区与主题状态")
-    sub.add_parser("light", help="切换到浅色主题")
-    sub.add_parser("dark", help="切换到深色主题")
-    sub.add_parser("toggle", help="浅色/深色切换")
-    sub.add_parser("auto-preview", help="根据当前时间给出自动模式建议（不写注册表）")
+    sub.add_parser("status", help="Show local time/timezone and current theme state")
+    sub.add_parser("light", help="Switch to light theme")
+    sub.add_parser("dark", help="Switch to dark theme")
+    sub.add_parser("toggle", help="Toggle light/dark theme")
+    sub.add_parser("auto-preview", help="Preview auto mode by current local time")
 
     return p
 
