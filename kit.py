@@ -57,9 +57,34 @@ def run_autodark() -> int:
         console.print(f"[red]Autodark entry file not found: {entry}[/red]")
         return 1
 
-    console.print(Panel.fit("Starting Autodark module...", title="Kit", border_style="blue"))
-    console.print("[cyan]Tip: light/dark/toggle works on Windows. Running status now.[/cyan]")
-    return subprocess.call([sys.executable, str(entry), "status"], cwd=str(ROOT))
+    console.print(Panel.fit("Autodark Controls", title="Kit", border_style="blue"))
+    table = Table(title="Autodark Actions")
+    table.add_column("Option", style="cyan", no_wrap=True)
+    table.add_column("Command", style="magenta")
+    table.add_row("1", "status")
+    table.add_row("2", "auto-preview")
+    table.add_row("3", "light")
+    table.add_row("4", "dark")
+    table.add_row("5", "toggle")
+    table.add_row("b", "back")
+    console.print(table)
+
+    choice = console.input("[bold]> Select action:[/bold] ").strip().lower()
+    mapping = {
+        "1": "status",
+        "2": "auto-preview",
+        "3": "light",
+        "4": "dark",
+        "5": "toggle",
+    }
+    if choice == "b":
+        return 0
+    cmd = mapping.get(choice)
+    if not cmd:
+        console.print("[yellow]Invalid action.[/yellow]")
+        return 1
+
+    return subprocess.call([sys.executable, str(entry), cmd], cwd=str(ROOT))
 
 
 def menu() -> str:
