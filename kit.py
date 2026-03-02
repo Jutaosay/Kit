@@ -66,6 +66,7 @@ def run_autodark() -> int:
     table.add_row("3", "light")
     table.add_row("4", "dark")
     table.add_row("5", "toggle")
+    table.add_row("6", "auto-cst (UTC+8 fixed schedule)")
     table.add_row("b", "back")
     console.print(table)
 
@@ -76,6 +77,7 @@ def run_autodark() -> int:
         "3": "light",
         "4": "dark",
         "5": "toggle",
+        "6": "auto-cst",
     }
     if choice == "b":
         return 0

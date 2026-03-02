@@ -56,7 +56,6 @@ def read_theme_state() -> dict:
 
 
 def _broadcast_theme_change() -> None:
-    # Notify Windows that theme settings changed for faster UI refresh.
     HWND_BROADCAST = 0xFFFF
     WM_SETTINGCHANGE = 0x001A
     SMTO_ABORTIFHUNG = 0x0002
@@ -95,6 +94,12 @@ def recommended_mode_by_time(now: dt.datetime, dark_start: int = 19, light_start
     return "light"
 
 
+def recommended_mode_by_cst_window(now_utc: dt.datetime) -> tuple[str, dt.datetime]:
+    cst_now = now_utc + dt.timedelta(hours=8)
+    mode = "dark" if (cst_now.hour >= 18 or cst_now.hour < 6) else "light"
+    return mode, cst_now
+
+
 def cmd_status() -> int:
     t = get_local_time_info()
     print(f"Local time : {t.now.strftime('%Y-%m-%d %H:%M:%S %z')}")
@@ -105,9 +110,14 @@ def cmd_status() -> int:
         print(f"Theme      : {state['error']}")
         return 1
 
+    now_utc = dt.datetime.now(dt.timezone.utc)
+    cst_mode, cst_now = recommended_mode_by_cst_window(now_utc)
+
     print(f"Theme(app) : {state['apps']}")
     print(f"Theme(sys) : {state['system']}")
-    print(f"Recommend  : {recommended_mode_by_time(t.now)}")
+    print(f"Recommend  : {recommended_mode_by_time(t.now)} (local window)")
+    print(f"CST+8 now  : {cst_now.strftime('%Y-%m-%d %H:%M:%S')} UTC+8")
+    print(f"CST+8 mode : {cst_mode} (18:00-05:59 dark, 06:00-17:59 light)")
     return 0
 
 
@@ -138,8 +148,6 @@ def cmd_auto_preview() -> int:
     print(f"Auto mode  : {mode}")
     print("(Preview only. No registry changes.)")
     return 0
-
-
 
 
 def cmd_auto_apply(dark_start: int, light_start: int, expected_utc_offset: float = 8.0, force: bool = False) -> int:
@@ -173,6 +181,34 @@ def cmd_auto_apply(dark_start: int, light_start: int, expected_utc_offset: float
     return 0
 
 
+def cmd_auto_cst(force: bool = False) -> int:
+    now_utc = dt.datetime.now(dt.timezone.utc)
+    target_mode, cst_now = recommended_mode_by_cst_window(now_utc)
+    local = get_local_time_info()
+
+    print(f"UTC now    : {now_utc.strftime('%Y-%m-%d %H:%M:%S %z')}")
+    print(f"CST+8 now  : {cst_now.strftime('%Y-%m-%d %H:%M:%S')} UTC+8")
+    print(f"Local time : {local.now.strftime('%Y-%m-%d %H:%M:%S %z')} ({local.tz_name})")
+    print(f"Rule       : dark 18:00-05:59, light 06:00-17:59 (CST+8)")
+    print(f"Target     : {target_mode}")
+
+    state = read_theme_state()
+    if "error" in state:
+        print(state["error"])
+        return 1
+
+    current = state["apps"]
+    print(f"Current    : {current}")
+
+    if (not force) and current == target_mode:
+        print("Action     : no change needed")
+        return 0
+
+    set_theme(target_mode)
+    print(f"Action     : theme switched to {target_mode}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Autodark: Windows theme switcher foundation")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -193,6 +229,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Expected local UTC offset, default UTC+8",
     )
     auto_parser.add_argument("--force", action="store_true", help="Force apply even if mode is already correct")
+
+    auto_cst_parser = sub.add_parser(
+        "auto-cst",
+        help="Apply fixed UTC+8 schedule: dark 18:00-05:59, light 06:00-17:59",
+    )
+    auto_cst_parser.add_argument("--force", action="store_true", help="Force apply even if mode is already correct")
 
     return p
 
@@ -219,6 +261,9 @@ def main() -> int:
                 expected_utc_offset=args.expected_utc_offset,
                 force=args.force,
             )
+        if args.cmd == "auto-cst":
+            return cmd_auto_cst(force=args.force)
+
         parser.print_help()
         return 1
     except Exception as e:

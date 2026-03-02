@@ -33,3 +33,10 @@ python Autodark\autodark.py auto-preview
 - Uses local hour window to choose mode (`dark` or `light`).
 - Default expectation is UTC+8 (`--expected-utc-offset 8`).
 - If current theme already matches target, no change is applied unless `--force` is used.
+
+
+### Fixed UTC+8 schedule (recommended)
+
+- `auto-cst` ignores local timezone setting and computes mode from UTC+8 directly.
+- Rule: **dark 18:00-05:59**, **light 06:00-17:59** (CST/UTC+8).
+- Suitable for Windows Task Scheduler one-shot runs.
