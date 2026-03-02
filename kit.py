@@ -89,12 +89,25 @@ def run_autodark() -> int:
     return subprocess.call([sys.executable, str(entry), cmd], cwd=str(ROOT))
 
 
+
+
+def run_cleaner() -> int:
+    entry = ROOT / "Cleaner" / "cleaner.py"
+    if not entry.exists():
+        console.print(f"[red]Cleaner entry file not found: {entry}[/red]")
+        return 1
+
+    console.print(Panel.fit("Starting Cleaner module...", title="Kit", border_style="magenta"))
+    return subprocess.call([sys.executable, str(entry)], cwd=str(ROOT))
+
+
 def menu() -> str:
     table = Table(title="Kit Modules")
     table.add_column("Option", style="cyan", no_wrap=True)
     table.add_column("Module", style="magenta")
     table.add_row("1", "Monitor")
     table.add_row("2", "Autodark (Windows Theme)")
+    table.add_row("3", "Cleaner (Cache/Residue Scanner)")
     table.add_row("q", "Quit")
     console.print(table)
     return console.input("[bold]> Select:[/bold] ").strip().lower()
@@ -106,6 +119,7 @@ def main() -> int:
     actions: dict[str, Callable[[], int]] = {
         "1": run_monitor,
         "2": run_autodark,
+        "3": run_cleaner,
         "q": lambda: 0,
     }
 

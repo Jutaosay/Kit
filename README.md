@@ -10,6 +10,7 @@ It is designed for daily utility workflows while keeping dependency isolation st
 - `kit.py`: main launcher (Rich menu)
 - `Monitor/`: file/download monitoring module
 - `Autodark/`: Windows theme switching foundation
+- `Cleaner/`: Windows cache/residue listing module
 - `modules/`: future modules
 - `core/`: shared utilities
 - `scripts/`: helper scripts
@@ -38,6 +39,7 @@ cd /d C:\Users\<YourUser>\Codings\Projects\Kit
 python -m py_compile kit.py
 python -m py_compile Autodark\autodark.py
 python -m py_compile Monitor\monitor.py
+python -m py_compile Cleaner\cleaner.py
 ```
 
 ## Autodark Commands
@@ -83,3 +85,15 @@ Autodark now supports interactive actions from `kit.py`: `status`, `auto-preview
 
 
 For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 rule).
+
+
+## Cleaner Commands
+
+```bat
+python Cleaner\cleaner.py
+python Cleaner\cleaner.py --top 100 --min-large-mb 2048
+python Cleaner\cleaner.py --portable-root D:\\PortableApps --portable-root E:\\Tools
+python Cleaner\cleaner.py --json
+```
+
+Cleaner is report-only (no deletion).
