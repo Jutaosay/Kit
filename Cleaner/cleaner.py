@@ -232,11 +232,22 @@ def _read_reg_value(key, value_name: str) -> str | None:
 def _path_stem_from_maybe_quoted(raw: str | None) -> str | None:
     if not raw:
         return None
-    s = raw.strip().strip('"')
-    # handle arguments after executable path
-    if ".exe" in s.lower():
-        idx = s.lower().find(".exe")
-        s = s[: idx + 4]
+
+    s = raw.strip()
+
+    # Prefer explicitly quoted executable/path segment.
+    m = re.search(r'"([^\"]+)"', s)
+    if m:
+        s = m.group(1)
+
+    # Handle common command-line forms where args follow executable.
+    lower = s.lower()
+    for suffix in [".exe", ".msi", ".bat", ".cmd", ".ps1"]:
+        idx = lower.find(suffix)
+        if idx != -1:
+            s = s[: idx + len(suffix)]
+            break
+
     stem = Path(s).stem
     return stem or None
 

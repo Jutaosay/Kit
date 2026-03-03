@@ -16,6 +16,7 @@ It does not delete anything.
 
 - Reads installed app list from Windows uninstall registry keys
 - Builds installed signatures from `DisplayName`, `Publisher`, `InstallLocation`, `UninstallString`, `DisplayIcon`
+- Extracts executable/script stems from uninstall/display command paths (e.g. `.exe/.msi/.bat/.cmd/.ps1`) to improve matching
 - Reads portable app signatures from optional `--portable-root` paths
 - Excludes matched installed/portable signatures from residue candidates where possible
 

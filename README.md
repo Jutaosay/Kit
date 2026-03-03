@@ -98,7 +98,7 @@ python Cleaner\cleaner.py --size-delta-threshold-mb 100 --diff-top 20
 python Cleaner\cleaner.py --json
 ```
 
-Cleaner is report-only (no deletion), now with risk scoring and incremental snapshot diff.
+Cleaner is report-only (no deletion), now with risk scoring, incremental snapshot diff, and stronger installed-signature matching.
 
 
 Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`
