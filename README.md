@@ -99,7 +99,7 @@ python Cleaner\cleaner.py --registry-residue
 python Cleaner\cleaner.py --registry-residue --registry-top 200 --json
 ```
 
-Cleaner is report-only (no deletion), now with risk scoring, incremental snapshot diff, and stronger installed-signature matching.
+Cleaner is report-only (no deletion), now with risk scoring, incremental snapshot diff, stronger installed-signature matching, and prioritized registry-residue triage.
 
 
 Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`

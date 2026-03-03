@@ -12,6 +12,7 @@ It does not delete anything.
 - Risk scoring (`score` + `risk_level`) with age-aware weighting
 - Incremental snapshot diff (`added / removed / changed`) between runs
 - Uninstall-registry residue detection from local uninstall entries (`--registry-residue`)
+- Residue triage fields: `cleanup_priority` (`Safe-Candidate`/`Review`/`Low`) + `action_hint`
 
 ## How it avoids false positives
 
@@ -38,6 +39,7 @@ python Cleaner\cleaner.py --registry-residue --registry-top 200 --json
 - This module is **report-only**. You decide what to delete manually.
 - Run inside `.venv` through `kit.py` launcher for project consistency.
 - Snapshot diff is enabled by default and writes to `cleaner_snapshot.json` (in current working directory).
+- Registry residue output is prioritized for cleanup planning, but does **not** modify registry keys.
 
 
 Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`

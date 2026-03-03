@@ -100,6 +100,8 @@ class RegistryResidue:
     display_name: str
     reason: str
     confidence: str
+    cleanup_priority: str
+    action_hint: str
 
 
 def normalize_name(text: str) -> str:
@@ -344,21 +346,43 @@ def detect_registry_residue(entries: list[UninstallEntry], known_signatures: set
             if not raw:
                 continue
 
-            p = raw.strip().strip('"')
-            if ".exe" in p.lower():
-                idx = p.lower().find(".exe")
-                p = p[: idx + 4]
+            p = raw.strip()
+            m = re.search(r'"([^\"]+)"', p)
+            if m:
+                p = m.group(1)
+
+            lower = p.lower()
+            for suffix in [".exe", ".msi", ".bat", ".cmd", ".ps1"]:
+                idx = lower.find(suffix)
+                if idx != -1:
+                    p = p[: idx + len(suffix)]
+                    break
+
             path_evidence.append(p)
 
         missing_paths = []
         for p in path_evidence:
+            # If it looks like just a stem token, skip fs existence check.
+            if "\\" not in p and "/" not in p and ":" not in p:
+                continue
             try:
                 if not Path(p).exists():
                     missing_paths.append(p)
             except OSError:
                 continue
 
+        def _classify(reason: str, confidence: str) -> tuple[str, str]:
+            if confidence == "High":
+                return ("Safe-Candidate", "review_then_delete_registry_key")
+            if confidence == "Medium":
+                return ("Review", "confirm_path_and_uninstall_link")
+            return ("Low", "keep_for_now")
+
         if not e.display_name and not path_evidence:
+            priority, hint = _classify(
+                "Uninstall entry has no DisplayName and no usable install/uninstall path",
+                "Medium",
+            )
             residues.append(
                 RegistryResidue(
                     hive=e.hive,
@@ -366,6 +390,8 @@ def detect_registry_residue(entries: list[UninstallEntry], known_signatures: set
                     display_name="(no DisplayName)",
                     reason="Uninstall entry has no DisplayName and no usable install/uninstall path",
                     confidence="Medium",
+                    cleanup_priority=priority,
+                    action_hint=hint,
                 )
             )
             continue
@@ -375,6 +401,7 @@ def detect_registry_residue(entries: list[UninstallEntry], known_signatures: set
             continue
 
         if missing_paths and len(missing_paths) == len(path_evidence) and path_evidence:
+            priority, hint = _classify("All uninstall/install/display paths are missing", "High")
             residues.append(
                 RegistryResidue(
                     hive=e.hive,
@@ -382,11 +409,14 @@ def detect_registry_residue(entries: list[UninstallEntry], known_signatures: set
                     display_name=e.display_name or "(no DisplayName)",
                     reason="All uninstall/install/display paths are missing",
                     confidence="High",
+                    cleanup_priority=priority,
+                    action_hint=hint,
                 )
             )
             continue
 
         if not e.display_name and missing_paths:
+            priority, hint = _classify("No DisplayName and some referenced paths are missing", "Medium")
             residues.append(
                 RegistryResidue(
                     hive=e.hive,
@@ -394,12 +424,25 @@ def detect_registry_residue(entries: list[UninstallEntry], known_signatures: set
                     display_name="(no DisplayName)",
                     reason="No DisplayName and some referenced paths are missing",
                     confidence="Medium",
+                    cleanup_priority=priority,
+                    action_hint=hint,
                 )
             )
 
     # de-duplicate by registry key path
     uniq = {f"{r.hive}::{r.key_path}": r for r in residues}
-    return sorted(uniq.values(), key=lambda x: (x.confidence, x.display_name), reverse=True)
+
+    confidence_rank = {"High": 3, "Medium": 2, "Low": 1}
+    priority_rank = {"Safe-Candidate": 3, "Review": 2, "Low": 1}
+    return sorted(
+        uniq.values(),
+        key=lambda x: (
+            priority_rank.get(x.cleanup_priority, 0),
+            confidence_rank.get(x.confidence, 0),
+            x.display_name,
+        ),
+        reverse=True,
+    )
 
 
 def score_finding(
@@ -665,14 +708,24 @@ def build_snapshot_diff(
 
 def print_registry_residue(residues: list[RegistryResidue], top_n: int = 100) -> None:
     table = Table(title=f"Registry Uninstall Residue (Top {min(top_n, len(residues))})")
+    table.add_column("Priority", style="yellow")
     table.add_column("Confidence", style="red")
     table.add_column("Hive", style="cyan")
     table.add_column("DisplayName", style="magenta")
     table.add_column("KeyPath", style="green")
+    table.add_column("ActionHint", style="blue")
     table.add_column("Reason", style="white")
 
     for r in residues[:top_n]:
-        table.add_row(r.confidence, r.hive, r.display_name, r.key_path, r.reason)
+        table.add_row(
+            r.cleanup_priority,
+            r.confidence,
+            r.hive,
+            r.display_name,
+            r.key_path,
+            r.action_hint,
+            r.reason,
+        )
 
     console.print(table)
     console.print("[bold green]Note:[/bold green] registry residue detection is report-only.")
