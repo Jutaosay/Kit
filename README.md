@@ -89,7 +89,7 @@ For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 
 ## Launcher UX
 
 - Main menu uses full-screen refresh (`console.clear()`) for cleaner interaction.
-- After each module run, launcher shows exit status and asks for next step (`rerun/main menu/quit`).
+- After each module run, launcher shows exit status and asks for next step (`(r)erun / (m)ain menu / (q)uit`) with a blank-line separator to avoid terminal overlap artifacts.
 - Autodark has its own sub-menu loop with immediate rerun support.
 - Monitor is launched with `--log-level INFO` by default via launcher so scan progress is clearly visible.
 

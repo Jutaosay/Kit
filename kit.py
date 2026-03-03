@@ -120,7 +120,7 @@ def run_autodark() -> ModuleResult:
         else:
             console.print("[green]Autodark action completed.[/green]")
 
-        next_choice = console.input("[bold][r]erun action menu / [m]ain menu / [q]uit:[/bold] ").strip().lower()
+        next_choice = console.input("[bold](r)erun action menu / (m)ain menu / (q)uit:[/bold] ").strip().lower()
         if next_choice == "q":
             return ModuleResult("Autodark", 0)
         if next_choice == "m":
@@ -164,7 +164,8 @@ def _post_module_prompt(result: ModuleResult) -> str:
     else:
         console.print(f"[red]{result.name} exited with code {result.code}.[/red]")
 
-    return console.input("[bold][r]erun / [m]ain menu / [q]uit:[/bold] ").strip().lower()
+    console.print()
+    return console.input("[bold](r)erun / (m)ain menu / (q)uit:[/bold] ").strip().lower()
 
 
 def main() -> int:
