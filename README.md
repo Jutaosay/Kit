@@ -93,6 +93,33 @@ For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 
 - Autodark has its own sub-menu loop with immediate rerun support.
 - Monitor is launched with `--log-level INFO` by default via launcher so scan progress is clearly visible.
 
+## Git Push Workflow (token-safe, reproducible)
+
+When pushing from automation environments where interactive credential prompts are unreliable, use an explicit auth header workflow.
+
+1) Load token env (example stores secrets in `~/.openclaw/secrets.env`):
+
+```bash
+source /home/ubuntu/.openclaw/secrets.env
+```
+
+2) Push with explicit username + token (without writing token to git config):
+
+```bash
+git -c http.extraheader="AUTHORIZATION: basic $(printf 'Jutaosay:%s' "$L2_GITHUB_WRITE_TOKEN" | base64 -w0)" \
+  push origin main
+```
+
+3) Verify:
+
+```bash
+git log --oneline origin/main -n 3
+```
+
+Notes:
+- Prefer write token (`L2`) only for push; use read token (`L1`) for read-only operations.
+- Do not hardcode tokens in scripts or commit history.
+
 ## Cleaner Commands
 
 ```bat
