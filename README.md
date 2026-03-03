@@ -7,7 +7,7 @@ It is designed for daily utility workflows while keeping dependency isolation st
 
 ## Structure
 
-- `kit.py`: main launcher (Rich menu)
+- `kit.py`: main launcher (Rich menu with clear-screen refresh + run-result feedback)
 - `Monitor/`: file/download monitoring module
 - `Autodark/`: Windows theme switching foundation
 - `Cleaner/`: Windows cache/residue listing module
@@ -86,6 +86,12 @@ Autodark now supports interactive actions from `kit.py`: `status`, `auto-preview
 
 For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 rule).
 
+
+## Launcher UX
+
+- Main menu uses full-screen refresh (`console.clear()`) for cleaner interaction.
+- After each module run, launcher shows exit status and asks for next step (`rerun/main menu/quit`).
+- Autodark has its own sub-menu loop with immediate rerun support.
 
 ## Cleaner Commands
 
