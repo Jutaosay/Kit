@@ -61,7 +61,12 @@ def run_monitor() -> ModuleResult:
         console.print(f"[red]Monitor entry file not found: {entry}[/red]")
         return ModuleResult("Monitor", 1)
 
-    code = _run_python_entry(entry=entry, cwd=monitor_dir)
+    console.clear()
+    console.print(Panel.fit("Monitor Module", title="Kit", border_style="green"))
+    console.print("[dim]Launching Monitor with INFO logging so scan progress is visible...[/dim]")
+
+    # Use INFO level by default so monitor progress tracker/log stages are visible.
+    code = _run_python_entry(entry=entry, cwd=monitor_dir, args=["--log-level", "INFO"])
     return ModuleResult("Monitor", code)
 
 
