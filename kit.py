@@ -4,12 +4,15 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
 from rich.console import Console
+from rich.layout import Layout
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 ROOT = Path(__file__).resolve().parent
 console = Console()
@@ -19,6 +22,13 @@ console = Console()
 class ModuleResult:
     name: str
     code: int
+
+
+@dataclass
+class AppState:
+    selected_module: str = "monitor"
+    last_result: ModuleResult | None = None
+    last_run_at: str | None = None
 
 
 def in_venv() -> bool:
@@ -53,146 +63,169 @@ def _run_python_entry(entry: Path, cwd: Path, args: list[str] | None = None) -> 
     return subprocess.call(cmd, cwd=str(cwd))
 
 
-def run_monitor() -> ModuleResult:
+def _run_monitor(args: list[str], label: str) -> ModuleResult:
     monitor_dir = ROOT / "Monitor"
     entry = monitor_dir / "monitor.py"
-
     if not entry.exists():
         console.print(f"[red]Monitor entry file not found: {entry}[/red]")
-        return ModuleResult("Monitor", 1)
+        return ModuleResult(label, 1)
 
     console.clear()
-    console.print(Panel.fit("Monitor Module", title="Kit", border_style="green"))
-    console.print("[dim]Launching Monitor with INFO logging so scan progress is visible...[/dim]")
-
-    # Use INFO level by default so monitor progress tracker/log stages are visible.
-    code = _run_python_entry(entry=entry, cwd=monitor_dir, args=["--log-level", "INFO"])
-    return ModuleResult("Monitor", code)
+    console.print(Panel.fit(f"Running: {label}", title="Monitor", border_style="green"))
+    code = _run_python_entry(entry=entry, cwd=monitor_dir, args=args)
+    return ModuleResult(label, code)
 
 
-def _autodark_action_menu() -> str:
-    table = Table(title="Autodark Actions")
-    table.add_column("Option", style="cyan", no_wrap=True)
-    table.add_column("Command", style="magenta")
-    table.add_row("1", "status")
-    table.add_row("2", "auto-preview")
-    table.add_row("3", "light")
-    table.add_row("4", "dark")
-    table.add_row("5", "toggle")
-    table.add_row("6", "auto-cst (UTC+8 fixed schedule)")
-    table.add_row("b", "back")
-    console.print(table)
-    return console.input("[bold]> Select action:[/bold] ").strip().lower()
-
-
-def run_autodark() -> ModuleResult:
+def _run_autodark(cmd: str, label: str) -> ModuleResult:
     entry = ROOT / "Autodark" / "autodark.py"
     if not entry.exists():
         console.print(f"[red]Autodark entry file not found: {entry}[/red]")
-        return ModuleResult("Autodark", 1)
+        return ModuleResult(label, 1)
 
-    mapping = {
-        "1": "status",
-        "2": "auto-preview",
-        "3": "light",
-        "4": "dark",
-        "5": "toggle",
-        "6": "auto-cst",
-    }
-
-    while True:
-        console.clear()
-        console.print(Panel.fit("Autodark Controls", title="Kit", border_style="blue"))
-        choice = _autodark_action_menu()
-
-        if choice == "b":
-            return ModuleResult("Autodark", 0)
-
-        cmd = mapping.get(choice)
-        if not cmd:
-            console.print("[yellow]Invalid action.[/yellow]")
-            console.input("[dim]Press Enter to continue...[/dim]")
-            continue
-
-        code = _run_python_entry(entry=entry, cwd=ROOT, args=[cmd])
-        if code != 0:
-            console.print(f"[red]Autodark exited with code {code}[/red]")
-        else:
-            console.print("[green]Autodark action completed.[/green]")
-
-        next_choice = console.input("[bold](r)erun action menu / (m)ain menu / (q)uit:[/bold] ").strip().lower()
-        if next_choice == "q":
-            return ModuleResult("Autodark", 0)
-        if next_choice == "m":
-            return ModuleResult("Autodark", code)
-
-
-def _render_main_menu(last_result: ModuleResult | None = None) -> str:
     console.clear()
-    console.print(Panel.fit("Kit Launcher", title="Kit", border_style="green"))
-
-    if last_result is not None:
-        style = "green" if last_result.code == 0 else "red"
-        console.print(
-            f"[{style}]Last run:[/{style}] {last_result.name} exited with code {last_result.code}"
-        )
-
-    table = Table(title="Kit Modules")
-    table.add_column("Option", style="cyan", no_wrap=True)
-    table.add_column("Module", style="magenta")
-    table.add_row("1", "Monitor")
-    table.add_row("2", "Autodark (Windows Theme)")
-    table.add_row("q", "Quit")
-    console.print(table)
-    return console.input("[bold]> Select:[/bold] ").strip().lower()
+    console.print(Panel.fit(f"Running: {label}", title="Autodark", border_style="blue"))
+    code = _run_python_entry(entry=entry, cwd=ROOT, args=[cmd])
+    return ModuleResult(label, code)
 
 
-def _post_module_prompt(result: ModuleResult) -> str:
-    if result.code == 0:
-        console.print(f"[green]{result.name} completed successfully.[/green]")
+def _main_menu_panel(state: AppState) -> Panel:
+    table = Table(show_header=True, header_style="bold cyan", box=None)
+    table.add_column("Key", width=6)
+    table.add_column("Module")
+
+    modules = [("1", "monitor", "Monitor"), ("2", "autodark", "Autodark")]
+    for key, module_id, label in modules:
+        selected = "◉" if state.selected_module == module_id else "○"
+        style = "bold green" if state.selected_module == module_id else "white"
+        table.add_row(key, f"[{style}]{selected} {label}[/{style}]")
+
+    hint = Text("Select module: 1/2", style="dim")
+    return Panel(table, title="Main Directory", subtitle=hint, border_style="green")
+
+
+def _status_panel(state: AppState) -> Panel:
+    t = Table(show_header=False, box=None, pad_edge=False)
+    t.add_column("k", style="cyan", width=16)
+    t.add_column("v", style="white")
+
+    t.add_row("Selected", state.selected_module)
+    if state.last_result is None:
+        t.add_row("Last Run", "(none)")
+        t.add_row("Exit Code", "-")
     else:
-        console.print(f"[red]{result.name} exited with code {result.code}.[/red]")
+        code_style = "green" if state.last_result.code == 0 else "red"
+        t.add_row("Last Run", state.last_result.name)
+        t.add_row("Exit Code", f"[{code_style}]{state.last_result.code}[/{code_style}]")
+        t.add_row("When", state.last_run_at or "-")
 
-    console.print()
-    return console.input("[bold](r)erun / (m)ain menu / (q)uit:[/bold] ").strip().lower()
+    t.add_row("Python", Path(sys.executable).name)
+    t.add_row("Venv", "yes" if in_venv() else "no")
+
+    return Panel(t, title="Run Status", border_style="magenta")
+
+
+def _submenu_actions(state: AppState) -> list[tuple[str, str, Callable[[], ModuleResult]]]:
+    if state.selected_module == "monitor":
+        return [
+            ("1", "Run once (INFO logs)", lambda: _run_monitor(["--log-level", "INFO"], "Monitor once")),
+            ("2", "Show system info", lambda: _run_monitor(["--info"], "Monitor info")),
+            ("3", "Continuous mode (1h)", lambda: _run_monitor(["-c", "3600", "--log-level", "INFO"], "Monitor continuous")),
+        ]
+
+    return [
+        ("1", "status", lambda: _run_autodark("status", "Autodark status")),
+        ("2", "auto-preview", lambda: _run_autodark("auto-preview", "Autodark auto-preview")),
+        ("3", "light", lambda: _run_autodark("light", "Autodark light")),
+        ("4", "dark", lambda: _run_autodark("dark", "Autodark dark")),
+        ("5", "toggle", lambda: _run_autodark("toggle", "Autodark toggle")),
+        ("6", "auto-cst", lambda: _run_autodark("auto-cst", "Autodark auto-cst")),
+    ]
+
+
+def _submenu_panel(state: AppState) -> Panel:
+    actions = _submenu_actions(state)
+
+    table = Table(show_header=True, header_style="bold cyan")
+    table.add_column("Key", style="cyan", width=6)
+    table.add_column("Action", style="white")
+    for key, label, _ in actions:
+        table.add_row(key, label)
+
+    footer = Text("Input: 1/2 switch module | s<key> run action | q quit", style="dim")
+    return Panel(table, title="Sub Menu", subtitle=footer, border_style="blue")
+
+
+def _render_ui(state: AppState) -> None:
+    console.clear()
+
+    layout = Layout()
+    layout.split_row(
+        Layout(name="left", ratio=2),
+        Layout(name="right", ratio=3),
+    )
+
+    layout["left"].split_column(
+        Layout(name="main", ratio=3),
+        Layout(name="status", ratio=2),
+    )
+
+    layout["main"].update(_main_menu_panel(state))
+    layout["status"].update(_status_panel(state))
+    layout["right"].update(_submenu_panel(state))
+
+    console.print(layout)
+
+
+def _apply_action(state: AppState, token: str) -> bool:
+    token = token.strip().lower()
+    if token == "1":
+        state.selected_module = "monitor"
+        return True
+    if token == "2":
+        state.selected_module = "autodark"
+        return True
+
+    if token.startswith("s") and len(token) >= 2:
+        key = token[1:]
+        actions = {k: runner for k, _, runner in _submenu_actions(state)}
+        runner = actions.get(key)
+        if runner is None:
+            console.print(f"[yellow]Unknown sub action: {key}[/yellow]")
+            console.input("[dim]Press Enter to continue...[/dim]")
+            return True
+
+        result = runner()
+        state.last_result = result
+        state.last_run_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        if result.code == 0:
+            console.print(f"[green]{result.name} completed successfully.[/green]")
+        else:
+            console.print(f"[red]{result.name} exited with code {result.code}.[/red]")
+
+        console.input("[dim]Press Enter to return to dashboard...[/dim]")
+        return True
+
+    if token == "q":
+        return False
+
+    console.print("[yellow]Invalid input. Use 1/2, s<key>, or q.[/yellow]")
+    console.input("[dim]Press Enter to continue...[/dim]")
+    return True
 
 
 def main() -> int:
     ensure_venv_or_exit()
 
-    actions: dict[str, tuple[str, Callable[[], ModuleResult]]] = {
-        "1": ("Monitor", run_monitor),
-        "2": ("Autodark", run_autodark),
-    }
+    state = AppState()
+    running = True
 
-    last_result: ModuleResult | None = None
+    while running:
+        _render_ui(state)
+        cmd = console.input("[bold cyan]> Command:[/bold cyan] ")
+        running = _apply_action(state, cmd)
 
-    while True:
-        choice = _render_main_menu(last_result=last_result)
-
-        if choice == "q":
-            return 0
-
-        action_entry = actions.get(choice)
-        if action_entry is None:
-            console.print("[yellow]Invalid option. Please try again.[/yellow]")
-            console.input("[dim]Press Enter to continue...[/dim]")
-            continue
-
-        _, action = action_entry
-        result = action()
-        last_result = result
-
-        followup = _post_module_prompt(result)
-        if followup == "q":
-            return 0
-        if followup == "r":
-            # rerun same module once immediately; then continue normal loop
-            rerun_result = action()
-            last_result = rerun_result
-            followup2 = _post_module_prompt(rerun_result)
-            if followup2 == "q":
-                return 0
+    return 0
 
 
 if __name__ == "__main__":

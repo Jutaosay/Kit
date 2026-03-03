@@ -86,10 +86,16 @@ For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 
 
 ## Launcher UX
 
-- Main menu uses full-screen refresh (`console.clear()`) for cleaner interaction.
-- After each module run, launcher shows exit status and asks for next step (`(r)erun / (m)ain menu / (q)uit`) with a blank-line separator to avoid terminal overlap artifacts.
-- Autodark has its own sub-menu loop with immediate rerun support.
-- Monitor is launched with `--log-level INFO` by default via launcher so scan progress is clearly visible.
+- Three-column dashboard layout:
+  - Left top: `Main Directory`
+  - Left bottom: `Run Status`
+  - Right: `Sub Menu` (context actions for selected module)
+- Main command style:
+  - `1` / `2` to switch selected module
+  - `s<key>` to run a sub-menu action (example: `s1`, `s3`)
+  - `q` to quit
+- Monitor sub-menu includes run/info/continuous shortcuts and defaults to INFO logs for clearer progress visibility.
+- UI refreshes each loop using `console.clear()` for stable, non-overlapping output.
 
 ## Git Push Workflow (token-safe, reproducible)
 
