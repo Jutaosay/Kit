@@ -127,16 +127,6 @@ def run_autodark() -> ModuleResult:
             return ModuleResult("Autodark", code)
 
 
-def run_cleaner() -> ModuleResult:
-    entry = ROOT / "Cleaner" / "cleaner.py"
-    if not entry.exists():
-        console.print(f"[red]Cleaner entry file not found: {entry}[/red]")
-        return ModuleResult("Cleaner", 1)
-
-    code = _run_python_entry(entry=entry, cwd=ROOT)
-    return ModuleResult("Cleaner", code)
-
-
 def _render_main_menu(last_result: ModuleResult | None = None) -> str:
     console.clear()
     console.print(Panel.fit("Kit Launcher", title="Kit", border_style="green"))
@@ -152,7 +142,6 @@ def _render_main_menu(last_result: ModuleResult | None = None) -> str:
     table.add_column("Module", style="magenta")
     table.add_row("1", "Monitor")
     table.add_row("2", "Autodark (Windows Theme)")
-    table.add_row("3", "Cleaner (Cache/Residue Scanner)")
     table.add_row("q", "Quit")
     console.print(table)
     return console.input("[bold]> Select:[/bold] ").strip().lower()
@@ -174,7 +163,6 @@ def main() -> int:
     actions: dict[str, tuple[str, Callable[[], ModuleResult]]] = {
         "1": ("Monitor", run_monitor),
         "2": ("Autodark", run_autodark),
-        "3": ("Cleaner", run_cleaner),
     }
 
     last_result: ModuleResult | None = None

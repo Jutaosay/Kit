@@ -10,7 +10,6 @@ It is designed for daily utility workflows while keeping dependency isolation st
 - `kit.py`: main launcher (Rich menu with clear-screen refresh + run-result feedback)
 - `Monitor/`: file/download monitoring module
 - `Autodark/`: Windows theme switching foundation
-- `Cleaner/`: Windows cache/residue listing module
 - `modules/`: future modules
 - `core/`: shared utilities
 - `scripts/`: helper scripts
@@ -38,7 +37,6 @@ cd /d C:\Users\<YourUser>\Codings\Projects\Kit
 python -m py_compile kit.py
 python -m py_compile Autodark\autodark.py
 python -m py_compile Monitor\monitor.py
-python -m py_compile Cleaner\cleaner.py
 ```
 
 ## Autodark Commands
@@ -120,19 +118,3 @@ Notes:
 - Prefer write token (`L2`) only for push; use read token (`L1`) for read-only operations.
 - Do not hardcode tokens in scripts or commit history.
 
-## Cleaner Commands
-
-```bat
-python Cleaner\cleaner.py
-python Cleaner\cleaner.py --top 100 --min-large-mb 2048
-python Cleaner\cleaner.py --portable-root D:\\PortableApps --portable-root E:\\Tools
-python Cleaner\cleaner.py --snapshot-path cleaner_snapshot.json
-python Cleaner\cleaner.py --size-delta-threshold-mb 100 --diff-top 20
-python Cleaner\cleaner.py --registry-residue
-python Cleaner\cleaner.py --registry-residue --registry-top 200 --json
-```
-
-Cleaner is report-only (no deletion), now with risk scoring, incremental snapshot diff, stronger installed-signature matching, and prioritized registry-residue triage.
-
-
-Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`
