@@ -90,6 +90,7 @@ For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 
   - Left top: `Main Directory`
   - Left bottom: `Run Status`
   - Right: `Sub Menu` (context actions for selected module)
+- Autodark submenu is grouped as `Inspect` vs `Apply`, with recommended action order hints.
 - Main command style:
   - `1` / `2` to switch selected module
   - `s<key>` to run a sub-menu action (example: `s1`, `s3`)

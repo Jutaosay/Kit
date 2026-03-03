@@ -133,12 +133,12 @@ def _submenu_actions(state: AppState) -> list[tuple[str, str, Callable[[], Modul
         ]
 
     return [
-        ("1", "status", lambda: _run_autodark("status", "Autodark status")),
-        ("2", "auto-preview", lambda: _run_autodark("auto-preview", "Autodark auto-preview")),
-        ("3", "light", lambda: _run_autodark("light", "Autodark light")),
-        ("4", "dark", lambda: _run_autodark("dark", "Autodark dark")),
-        ("5", "toggle", lambda: _run_autodark("toggle", "Autodark toggle")),
-        ("6", "auto-cst", lambda: _run_autodark("auto-cst", "Autodark auto-cst")),
+        ("1", "Inspect: status (time + theme state)", lambda: _run_autodark("status", "Autodark status")),
+        ("2", "Inspect: auto-preview (no write)", lambda: _run_autodark("auto-preview", "Autodark auto-preview")),
+        ("3", "Apply: auto-cst (recommended)", lambda: _run_autodark("auto-cst", "Autodark auto-cst")),
+        ("4", "Apply: toggle", lambda: _run_autodark("toggle", "Autodark toggle")),
+        ("5", "Apply: light", lambda: _run_autodark("light", "Autodark light")),
+        ("6", "Apply: dark", lambda: _run_autodark("dark", "Autodark dark")),
     ]
 
 
@@ -147,12 +147,29 @@ def _submenu_panel(state: AppState) -> Panel:
 
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("Key", style="cyan", width=6)
+    table.add_column("Type", style="magenta", width=10)
     table.add_column("Action", style="white")
+
     for key, label, _ in actions:
-        table.add_row(key, label)
+        action_type = "Inspect" if "Inspect:" in label else "Apply"
+        clean_label = label.replace("Inspect: ", "").replace("Apply: ", "")
+        table.add_row(key, action_type, clean_label)
+
+    if state.selected_module == "autodark":
+        tips = (
+            "Tips: start with status/auto-preview, then apply auto-cst. "
+            "light/dark are manual overrides."
+        )
+    else:
+        tips = "Tips: use s1 for normal run, s2 for diagnostics, s3 for long-running monitor."
 
     footer = Text("Input: 1/2 switch module | s<key> run action | q quit", style="dim")
-    return Panel(table, title="Sub Menu", subtitle=footer, border_style="blue")
+    return Panel(
+        table,
+        title=f"Sub Menu · {state.selected_module}",
+        subtitle=Text(tips, style="dim") + Text("\n") + footer,
+        border_style="blue",
+    )
 
 
 def _render_ui(state: AppState) -> None:
