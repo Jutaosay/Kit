@@ -99,7 +99,7 @@ def _main_menu_panel(state: AppState) -> Panel:
         style = "bold green" if state.selected_module == module_id else "white"
         table.add_row(key, f"[{style}]{selected} {label}[/{style}]")
 
-    hint = Text("Select module: 1/2 · Run right action: s1/s2/...", style="dim")
+    hint = Text("Select module: 1/2 · Run right action: L1/L2/...", style="dim")
     return Panel(table, title="Main Directory", subtitle=hint, border_style="green")
 
 
@@ -153,7 +153,7 @@ def _submenu_panel(state: AppState) -> Panel:
     for key, label, _ in actions:
         action_type = "Inspect" if "Inspect:" in label else "Apply"
         clean_label = label.replace("Inspect: ", "").replace("Apply: ", "")
-        table.add_row(f"s{key}", action_type, clean_label)
+        table.add_row(f"L{key}", action_type, clean_label)
 
     if state.selected_module == "autodark":
         tips = (
@@ -161,9 +161,9 @@ def _submenu_panel(state: AppState) -> Panel:
             "light/dark are manual overrides."
         )
     else:
-        tips = "Tips: use s1 for normal run, s2 for diagnostics, s3 for long-running monitor."
+        tips = "Tips: use L1 for normal run, L2 for diagnostics, L3 for long-running monitor."
 
-    footer = Text("How to run: type s<number> (e.g. s1) | Switch module: 1/2 | q quit", style="dim")
+    footer = Text("How to run: type L<number> (e.g. L1) | Switch module: 1/2 | q quit", style="dim")
     return Panel(
         table,
         title=f"Sub Menu · {state.selected_module}",
@@ -202,7 +202,7 @@ def _apply_action(state: AppState, token: str) -> bool:
         state.selected_module = "autodark"
         return True
 
-    if token.startswith("s") and len(token) >= 2:
+    if token.startswith("l") and len(token) >= 2:
         key = token[1:]
         actions = {k: runner for k, _, runner in _submenu_actions(state)}
         runner = actions.get(key)
@@ -226,7 +226,7 @@ def _apply_action(state: AppState, token: str) -> bool:
     if token == "q":
         return False
 
-    console.print("[yellow]Invalid input. Use 1/2, s<key>, or q.[/yellow]")
+    console.print("[yellow]Invalid input. Use 1/2, L<key>, or q.[/yellow]")
     console.input("[dim]Press Enter to continue...[/dim]")
     return True
 
