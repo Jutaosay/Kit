@@ -25,11 +25,10 @@ It is designed for daily utility workflows while keeping dependency isolation st
 
 ```bat
 cd /d C:\Users\<YourUser>\Codings\Projects\Kit
-python -m venv .venv
-.\.venv\Scripts\activate.bat
-pip install -r requirements.txt
-python kit.py
+run.bat
 ```
+
+`run.bat` will auto-detect Python, create `.venv` if missing, install dependencies, and launch `kit.py`.
 
 ## Strict Test (inside venv)
 
