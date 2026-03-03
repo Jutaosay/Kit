@@ -99,7 +99,7 @@ def _main_menu_panel(state: AppState) -> Panel:
         style = "bold green" if state.selected_module == module_id else "white"
         table.add_row(key, f"[{style}]{selected} {label}[/{style}]")
 
-    hint = Text("Select module: 1/2", style="dim")
+    hint = Text("Select module: 1/2 · Run right action: s1/s2/...", style="dim")
     return Panel(table, title="Main Directory", subtitle=hint, border_style="green")
 
 
@@ -146,14 +146,14 @@ def _submenu_panel(state: AppState) -> Panel:
     actions = _submenu_actions(state)
 
     table = Table(show_header=True, header_style="bold cyan")
-    table.add_column("Key", style="cyan", width=6)
+    table.add_column("Run", style="cyan", width=8)
     table.add_column("Type", style="magenta", width=10)
     table.add_column("Action", style="white")
 
     for key, label, _ in actions:
         action_type = "Inspect" if "Inspect:" in label else "Apply"
         clean_label = label.replace("Inspect: ", "").replace("Apply: ", "")
-        table.add_row(key, action_type, clean_label)
+        table.add_row(f"s{key}", action_type, clean_label)
 
     if state.selected_module == "autodark":
         tips = (
@@ -163,7 +163,7 @@ def _submenu_panel(state: AppState) -> Panel:
     else:
         tips = "Tips: use s1 for normal run, s2 for diagnostics, s3 for long-running monitor."
 
-    footer = Text("Input: 1/2 switch module | s<key> run action | q quit", style="dim")
+    footer = Text("How to run: type s<number> (e.g. s1) | Switch module: 1/2 | q quit", style="dim")
     return Panel(
         table,
         title=f"Sub Menu · {state.selected_module}",
@@ -182,8 +182,8 @@ def _render_ui(state: AppState) -> None:
     )
 
     layout["left"].split_column(
-        Layout(name="main", ratio=3),
-        Layout(name="status", ratio=2),
+        Layout(name="main", size=8),
+        Layout(name="status", ratio=1),
     )
 
     layout["main"].update(_main_menu_panel(state))

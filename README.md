@@ -95,6 +95,8 @@ For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 
   - `1` / `2` to switch selected module
   - `s<key>` to run a sub-menu action (example: `s1`, `s3`)
   - `q` to quit
+- Sub-menu `Run` column now shows executable tokens directly (`s1`, `s2`, ...), with explicit bottom hint text.
+- Main Directory panel height is compacted to reduce excessive vertical blank area.
 - Monitor sub-menu includes run/info/continuous shortcuts and defaults to INFO logs for clearer progress visibility.
 - UI refreshes each loop using `console.clear()` for stable, non-overlapping output.
 
