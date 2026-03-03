@@ -348,7 +348,7 @@ def main() -> int:
 
     # optional common portable hints
     default_portable_hints = [
-        Path.home() / "Repos" / "Applications",
+        Path.home() / "Repo" / "Applications",
         Path.home() / "PortableApps",
         Path("D:/PortableApps"),
     ]

@@ -99,4 +99,4 @@ python Cleaner\cleaner.py --json
 Cleaner is report-only (no deletion).
 
 
-Default portable root includes: `C:\Users\<YourUser>\Repos\Applications`
+Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`

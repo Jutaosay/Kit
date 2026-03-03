@@ -31,4 +31,4 @@ python Cleaner\cleaner.py --json
 - Run inside `.venv` through `kit.py` launcher for project consistency.
 
 
-Default portable root includes: `C:\Users\<YourUser>\Repos\Applications`
+Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`
