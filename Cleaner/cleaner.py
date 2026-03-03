@@ -61,6 +61,18 @@ class InstalledApp:
 
 
 @dataclass
+class UninstallEntry:
+    hive: str
+    reg_path: str
+    subkey: str
+    display_name: str
+    publisher: str | None
+    install_location: str | None
+    uninstall_string: str | None
+    display_icon: str | None
+
+
+@dataclass
 class Finding:
     category: str
     path: str
@@ -79,6 +91,15 @@ class ScanResult:
     installed_signature_count: int
     portable_count: int
     findings: list[Finding]
+
+
+@dataclass
+class RegistryResidue:
+    hive: str
+    key_path: str
+    display_name: str
+    reason: str
+    confidence: str
 
 
 def normalize_name(text: str) -> str:
@@ -179,12 +200,12 @@ def is_game_like(path: Path) -> bool:
     return False
 
 
-def read_installed_apps() -> list[InstalledApp]:
+def read_uninstall_entries() -> list[UninstallEntry]:
     if not IS_WINDOWS:
         return []
 
     hive_map = {"HKLM": winreg.HKEY_LOCAL_MACHINE, "HKCU": winreg.HKEY_CURRENT_USER}
-    apps: list[InstalledApp] = []
+    entries: list[UninstallEntry] = []
 
     for hive_name, reg_path, _ in UNINSTALL_REG_PATHS:
         hive = hive_map[hive_name]
@@ -197,16 +218,18 @@ def read_installed_apps() -> list[InstalledApp]:
                     except OSError:
                         break
                     i += 1
+                    subkey_path = f"{reg_path}\\{sub}"
                     try:
                         with winreg.OpenKey(base, sub, 0, winreg.KEY_READ) as sk:
-                            name = _read_reg_value(sk, "DisplayName")
-                            if not name:
-                                continue
-                            apps.append(
-                                InstalledApp(
-                                    name=name,
-                                    install_location=_read_reg_value(sk, "InstallLocation"),
+                            name = _read_reg_value(sk, "DisplayName") or ""
+                            entries.append(
+                                UninstallEntry(
+                                    hive=hive_name,
+                                    reg_path=reg_path,
+                                    subkey=sub,
+                                    display_name=name,
                                     publisher=_read_reg_value(sk, "Publisher"),
+                                    install_location=_read_reg_value(sk, "InstallLocation"),
                                     uninstall_string=_read_reg_value(sk, "UninstallString"),
                                     display_icon=_read_reg_value(sk, "DisplayIcon"),
                                 )
@@ -216,6 +239,23 @@ def read_installed_apps() -> list[InstalledApp]:
         except OSError:
             continue
 
+    return entries
+
+
+def read_installed_apps() -> list[InstalledApp]:
+    apps: list[InstalledApp] = []
+    for e in read_uninstall_entries():
+        if not e.display_name:
+            continue
+        apps.append(
+            InstalledApp(
+                name=e.display_name,
+                install_location=e.install_location,
+                publisher=e.publisher,
+                uninstall_string=e.uninstall_string,
+                display_icon=e.display_icon,
+            )
+        )
     return apps
 
 
@@ -289,6 +329,77 @@ def scan_portable_names(portable_roots: list[Path], max_depth: int = 2) -> set[s
             except (PermissionError, FileNotFoundError, OSError):
                 continue
     return {n for n in names if n and len(n) >= 4}
+
+
+def detect_registry_residue(entries: list[UninstallEntry], known_signatures: set[str]) -> list[RegistryResidue]:
+    residues: list[RegistryResidue] = []
+
+    for e in entries:
+        key_path = f"{e.reg_path}\\{e.subkey}"
+        display_norm = normalize_name(e.display_name) if e.display_name else ""
+
+        # evidence collection
+        path_evidence: list[str] = []
+        for raw in [e.install_location, e.uninstall_string, e.display_icon]:
+            if not raw:
+                continue
+
+            p = raw.strip().strip('"')
+            if ".exe" in p.lower():
+                idx = p.lower().find(".exe")
+                p = p[: idx + 4]
+            path_evidence.append(p)
+
+        missing_paths = []
+        for p in path_evidence:
+            try:
+                if not Path(p).exists():
+                    missing_paths.append(p)
+            except OSError:
+                continue
+
+        if not e.display_name and not path_evidence:
+            residues.append(
+                RegistryResidue(
+                    hive=e.hive,
+                    key_path=key_path,
+                    display_name="(no DisplayName)",
+                    reason="Uninstall entry has no DisplayName and no usable install/uninstall path",
+                    confidence="Medium",
+                )
+            )
+            continue
+
+        if display_norm and display_norm in known_signatures:
+            # likely active install entry
+            continue
+
+        if missing_paths and len(missing_paths) == len(path_evidence) and path_evidence:
+            residues.append(
+                RegistryResidue(
+                    hive=e.hive,
+                    key_path=key_path,
+                    display_name=e.display_name or "(no DisplayName)",
+                    reason="All uninstall/install/display paths are missing",
+                    confidence="High",
+                )
+            )
+            continue
+
+        if not e.display_name and missing_paths:
+            residues.append(
+                RegistryResidue(
+                    hive=e.hive,
+                    key_path=key_path,
+                    display_name="(no DisplayName)",
+                    reason="No DisplayName and some referenced paths are missing",
+                    confidence="Medium",
+                )
+            )
+
+    # de-duplicate by registry key path
+    uniq = {f"{r.hive}::{r.key_path}": r for r in residues}
+    return sorted(uniq.values(), key=lambda x: (x.confidence, x.display_name), reverse=True)
 
 
 def score_finding(
@@ -552,6 +663,21 @@ def build_snapshot_diff(
     }
 
 
+def print_registry_residue(residues: list[RegistryResidue], top_n: int = 100) -> None:
+    table = Table(title=f"Registry Uninstall Residue (Top {min(top_n, len(residues))})")
+    table.add_column("Confidence", style="red")
+    table.add_column("Hive", style="cyan")
+    table.add_column("DisplayName", style="magenta")
+    table.add_column("KeyPath", style="green")
+    table.add_column("Reason", style="white")
+
+    for r in residues[:top_n]:
+        table.add_row(r.confidence, r.hive, r.display_name, r.key_path, r.reason)
+
+    console.print(table)
+    console.print("[bold green]Note:[/bold green] registry residue detection is report-only.")
+
+
 def print_result(res: ScanResult, top_n: int = 50, snapshot_diff: dict | None = None) -> None:
     console.print(f"[bold]Scan roots:[/bold] {', '.join(res.roots)}")
     console.print(
@@ -624,6 +750,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=15,
         help="Top changed/added/removed entries to keep in diff output (default: 15)",
     )
+    p.add_argument(
+        "--registry-residue",
+        action="store_true",
+        help="Detect uninstall-registry residue candidates using local uninstall entries (report-only)",
+    )
+    p.add_argument(
+        "--registry-top",
+        type=int,
+        default=100,
+        help="Top registry residue entries to display (default: 100)",
+    )
     return p
 
 
@@ -647,7 +784,18 @@ def main() -> int:
         if hint.exists() and hint not in portable_roots:
             portable_roots.append(hint)
 
-    installed = read_installed_apps()
+    uninstall_entries = read_uninstall_entries()
+    installed = [
+        InstalledApp(
+            name=e.display_name,
+            install_location=e.install_location,
+            publisher=e.publisher,
+            uninstall_string=e.uninstall_string,
+            display_icon=e.display_icon,
+        )
+        for e in uninstall_entries
+        if e.display_name
+    ]
     portable_names = scan_portable_names(portable_roots)
 
     result = scan_cleaner(
@@ -669,6 +817,9 @@ def main() -> int:
         )
         save_snapshot(snapshot_path, result)
 
+    known_signatures = build_installed_signatures(installed) | portable_names
+    registry_residue = detect_registry_residue(uninstall_entries, known_signatures) if args.registry_residue else []
+
     if args.json:
         payload = {
             "roots": result.roots,
@@ -677,11 +828,14 @@ def main() -> int:
             "portable_count": result.portable_count,
             "findings": [asdict(f) for f in result.findings],
             "snapshot_diff": snapshot_diff,
+            "registry_residue": [asdict(r) for r in registry_residue],
         }
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
     print_result(result, top_n=args.top, snapshot_diff=snapshot_diff)
+    if args.registry_residue:
+        print_registry_residue(registry_residue, top_n=args.registry_top)
     return 0
 
 

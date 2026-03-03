@@ -95,7 +95,8 @@ python Cleaner\cleaner.py --top 100 --min-large-mb 2048
 python Cleaner\cleaner.py --portable-root D:\\PortableApps --portable-root E:\\Tools
 python Cleaner\cleaner.py --snapshot-path cleaner_snapshot.json
 python Cleaner\cleaner.py --size-delta-threshold-mb 100 --diff-top 20
-python Cleaner\cleaner.py --json
+python Cleaner\cleaner.py --registry-residue
+python Cleaner\cleaner.py --registry-residue --registry-top 200 --json
 ```
 
 Cleaner is report-only (no deletion), now with risk scoring, incremental snapshot diff, and stronger installed-signature matching.

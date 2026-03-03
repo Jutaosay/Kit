@@ -11,6 +11,7 @@ It does not delete anything.
 - Basic game-like folder detection (to avoid aggressive assumptions)
 - Risk scoring (`score` + `risk_level`) with age-aware weighting
 - Incremental snapshot diff (`added / removed / changed`) between runs
+- Uninstall-registry residue detection from local uninstall entries (`--registry-residue`)
 
 ## How it avoids false positives
 
@@ -28,7 +29,8 @@ python Cleaner\cleaner.py --top 100 --min-large-mb 2048
 python Cleaner\cleaner.py --portable-root D:\PortableApps --portable-root E:\Tools
 python Cleaner\cleaner.py --snapshot-path cleaner_snapshot.json
 python Cleaner\cleaner.py --size-delta-threshold-mb 100 --diff-top 20
-python Cleaner\cleaner.py --json
+python Cleaner\cleaner.py --registry-residue
+python Cleaner\cleaner.py --registry-residue --registry-top 200 --json
 ```
 
 ## Notes
