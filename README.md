@@ -93,10 +93,12 @@ For stable scheduling on mainland Windows hosts, prefer `auto-cst` (fixed UTC+8 
 python Cleaner\cleaner.py
 python Cleaner\cleaner.py --top 100 --min-large-mb 2048
 python Cleaner\cleaner.py --portable-root D:\\PortableApps --portable-root E:\\Tools
+python Cleaner\cleaner.py --snapshot-path cleaner_snapshot.json
+python Cleaner\cleaner.py --size-delta-threshold-mb 100 --diff-top 20
 python Cleaner\cleaner.py --json
 ```
 
-Cleaner is report-only (no deletion).
+Cleaner is report-only (no deletion), now with risk scoring and incremental snapshot diff.
 
 
 Default portable root includes: `C:\Users\<YourUser>\Repo\Applications`
