@@ -9,6 +9,42 @@
     <ManifestTool Condition="Exists('$(WindowsSdkDir)bin\x64\mt.exe')">$(WindowsSdkDir)bin\x64\mt.exe</ManifestTool>
   </PropertyGroup>
 
+  <!-- Common.Dotnet.CsWinRT.props sets Release DebugType back to pdbonly after Directory.Build.props. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectExtension)' == '.csproj'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <Target Name="KitRemoveReleasePdbsFromCsprojOutput"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectExtension)' == '.csproj' and '$(OutDir)' != ''">
+    <ItemGroup>
+      <KitReleasePdbsInOutput Include="$(OutDir)**\*.pdb" />
+    </ItemGroup>
+
+    <Delete Files="@(KitReleasePdbsInOutput)" TreatErrorsAsWarnings="true" />
+  </Target>
+
+  <Target Name="KitRemoveNonEnglishSatelliteDirsFromCsprojOutput"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectExtension)' == '.csproj' and '$(OutDir)' != ''">
+    <ItemGroup>
+      <KitNonEnglishSatelliteLanguage Include="af-ZA;am-ET;ar-SA;as-IN;az-Latn-AZ;bg-BG;bn-IN;bs-Latn-BA;ca-ES;ca-Es-VALENCIA;cs-CZ;cy-GB;da-DK;de-DE;el-GR;en-GB;es-ES;es-MX;et-EE;eu-ES;fa-IR;fi-FI;fil-PH;fr-CA;fr-FR;ga-IE;gd-gb;gl-ES;gu-IN;he-IL;hi-IN;hr-HR;hu-HU;hy-AM;id-ID;is-IS;it-IT;ja-JP;ka-GE;kk-KZ;km-KH;kn-IN;kok-IN;ko-KR;lb-LU;lo-LA;lt-LT;lv-LV;mi-NZ;mk-MK;ml-IN;mr-IN;ms-MY;mt-MT;nb-NO;ne-NP;nl-NL;nn-NO;or-IN;pa-IN;pl-PL;pt-BR;pt-PT;quz-PE;ro-RO;ru-RU;sk-SK;sl-SI;sq-AL;sr-Cyrl-BA;sr-Cyrl-RS;sr-Latn-RS;sv-SE;ta-IN;te-IN;th-TH;tr-TR;tt-RU;ug-CN;uk-UA;ur-PK;uz-Latn-UZ;vi-VN;zh-CN;zh-TW" />
+      <KitNonEnglishSatelliteDirectories Include="@(KitNonEnglishSatelliteLanguage->'$(OutDir)%(Identity)')" />
+    </ItemGroup>
+
+    <RemoveDir Directories="@(KitNonEnglishSatelliteDirectories)" Condition="'@(KitNonEnglishSatelliteDirectories)' != ''" />
+  </Target>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectExtension)' == '.vcxproj'">
+    <ClCompile>
+      <DebugInformationFormat>None</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+
   <!-- Auto-restore NuGet for native vcxproj (PackageReference) when building inside VS -->
   <Target Name="EnsureNuGetRestoreForVcxproj" BeforeTargets="PrepareForBuild" Condition="
             '$(BuildingInsideVisualStudio)' == 'true'

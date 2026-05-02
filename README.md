@@ -8,6 +8,10 @@ Kit is currently a stability-first PowerToys-derived workspace, not a full produ
 
 Kit-specific changes should stay small and intentional: branding, settings storage, visible navigation, Home content, backup and restore defaults, and removal of product services that do not belong in a local workspace.
 
+## Current Version
+
+Current Kit version: `1.0.2 beta1`.
+
 ## Phase One Closeout
 
 The first phase is now effectively a working Kit shell plus one newly-authored module. The framework can load explicit PowerToys-style modules, show them in Settings and Home, keep Kit-branded storage separate from official PowerToys, and run Monitor's Downloads workflow through the existing runner/module-interface/settings path.
@@ -34,7 +38,7 @@ Kit does not automatically expose every upstream PowerToys utility copied in the
 
 ## PowerToys Compatibility Model
 
-Kit follows the PowerToys module-loading model instead of inventing a new plugin protocol. The runner loads known module interface DLLs through the maintained `knownModules` list in `src/runner/main.cpp`, currently:
+Kit follows the PowerToys module-loading model instead of inventing a new plugin protocol. The runner loads known module interface DLLs through the maintained `KitKnownModules` list in `src/runner/main.cpp`, currently:
 
 - `PowerToys.AwakeModuleInterface.dll`
 - `PowerToys.LightSwitchModuleInterface.dll`
@@ -76,11 +80,21 @@ Monitor is the first Kit module developed directly against the PowerToys module 
 
 The current Monitor parity target is the Python implementation's baseline functionality: scan Downloads, maintain `results.csv`, categorize files, preserve duplicate rows for analytics, organize files by category, and provide dry-run/delete primitives for installer cleanup. Registry-backed real installed-software discovery and richer UI actions are future refinements.
 
-The current Settings surface includes a manual scan card, a default Downloads folder picker, a hash algorithm drop-down with SHA1 as the default, and a same-row progress bar/percentage placed between the Manual Scan content and the Scan button. The progress display is intentionally lightweight for now; replacing it with worker-reported progress is a next-phase stabilization item.
+The current Settings surface includes a manual scan card, `OrganizeDownloads` and `CleanInstallers` toggles, a `Run in background` toggle, a default Downloads folder picker, a hash algorithm drop-down with SHA1 as the default, and a same-row progress bar/percentage placed between the Manual Scan content and the Scan button. The Monitor module toggle controls whether the module and Settings actions are available. `Run in background` separately controls whether the runner starts the persistent worker on enable; when it is off, Scan Now still launches a one-shot scan. The one-shot scan always refreshes the category folders and CSV state, then applies the current action toggles: `OrganizeDownloads` defaults to on, `CleanInstallers` defaults to off, and `Run in background` defaults to off. The progress display is intentionally lightweight for now; replacing it with worker-reported progress is a next-phase stabilization item.
+
+## Recent Monitor And Light Switch Stabilization
+
+The latest settings pass keeps the active module behavior closer to upstream PowerToys while preserving Kit's trimmed module surface:
+
+- Monitor's Scan Now action sends the `scanNow` custom action and the worker runs one pass with `--use-configured-actions`. This keeps manual scan, category-folder creation, organization, installer cleanup, and CSV writing on one code path while letting `OrganizeDownloads` and `CleanInstallers` decide which side effects are allowed.
+- Monitor's module enable path reads `runInBackground` before launching the worker. The module can stay enabled for Settings/Home/manual actions without starting a persistent worker.
+- Monitor's Settings page now places `OrganizeDownloads`, `CleanInstallers`, and `Run in background` immediately below Manual scan, matching the setting's control flow.
+- Light Switch keeps the upstream `Apply monitor settings to` shape, but in Kit it treats PowerDisplay as an optional compatibility surface. The controls are enabled from `GeneralSettings.Enabled.PowerDisplay`, and profile names are loaded from Kit storage at `%LOCALAPPDATA%\Kit\PowerDisplay\profiles.json` when that file exists. The loader is intentionally lightweight and tolerant of missing or malformed profile data so the trimmed Kit build does not need to re-import the full PowerDisplay module.
+- `Settings.UI.UnitTests` now has static regression coverage for Monitor settings order and Light Switch's PowerDisplay enable/profile-loading path.
 
 ## General and Home UI Scope
 
-General keeps the useful PowerToys settings structure but removes automatic update and telemetry controls. The About/version section is kept at the bottom. Home uses the PowerToys-style intro, module list, Quick Access, and shortcuts layout, but only for Kit modules.
+General keeps the useful PowerToys settings structure but removes automatic update and telemetry controls. The About section is intentionally reduced to small version text at the bottom. Home uses the PowerToys-style intro, module list, Quick Access, and shortcuts layout, but only for Kit modules.
 
 Visible UI should use English Kit text. Keep `PowerToys` only where it is still required for build-facing namespaces, assembly names, module interface names, upstream compatibility, or origin attribution.
 
@@ -98,6 +112,7 @@ Near-term work should optimize for predictable builds and low-risk PowerToys com
 - Keep UI state derived from real settings and module state. Home should show enabled modules consistently, and each Quick Access command should either perform a real action or navigate to the module settings page.
 - Keep Kit storage, backup, window title, and visible text separate from the installed official PowerToys app.
 - Do not re-enable automatic update or telemetry behavior in Kit.
+- Keep updater entry points and settings telemetry inert. The runner updater callbacks are no-ops, update toast/menu actions return without launching an updater, and the old settings telemetry source remains unstarted unless a future change deliberately replaces it with a local-only path.
 - Keep new modules split into a testable core library, worker process, native module interface, settings model, settings page, Home metadata, and static registration tests.
 - Run C++ module-interface verification sequentially, or through the solution scheduler, when projects share native outputs such as `Version.pdb` and `PowerToys.Interop` tracking logs. Independent parallel MSBuild invocations can race those shared files and report false build failures.
 - Keep documentation close to the implementation after each stabilization pass. The module-registration lists are intentionally manual, so stale docs are a real integration risk.
@@ -137,8 +152,16 @@ Recommended cleanup policy:
 - Before GitHub upload or archival, remove `src\kit\x64`, `src\kit\Debug`, `src\kit\Release`, `.vs`, `TestResults`, project `bin`/`obj` folders, and `src\kit\packages`.
 - During local iterative development, keep `src\kit\packages` if disk space allows. It prevents cold-build failures and slow restores caused by missing packages such as WIL and C++/WinRT.
 - If `packages` was removed, run Visual Studio `Restore NuGet Packages` or perform a full solution build before judging compile errors from missing headers or WinMD projections.
+- Release builds keep only `en-US` satellite resources, remove generated debug symbols from managed publish outputs, exclude inactive OOBE assets from the Settings publish, and no longer build the AdvancedPaste-only `LanguageModelProvider` dependency for the active Kit module set.
+- WindowsAppSDK 1.8 still contributes its own Windows AI/Onnx runtime files through the `Microsoft.WindowsAppSDK` meta-package. Removing those would require replacing the meta-package with granular WindowsAppSDK package references, so it is deferred until Settings compatibility can be validated more broadly.
 
 After source-size cleanup, `src\kit` should look close to source-only size: source and docs remain, while `x64`, `Release`, `.vs`, `packages`, and project `bin`/`obj` directories should be absent until the next restore/build.
+
+## Git Worktree Cleanup
+
+Git worktrees are used only when an isolated branch workspace is needed. On 2026-04-29, `git worktree prune` removed the stale `C:\Users\Zen\Repo\Codings\Kit\.worktrees\kit-phase1-host` record. The current `git worktree list --porcelain` baseline should show only `C:\Users\Zen\Repo\Codes\Kit` unless a new isolated worktree has been created deliberately.
+
+Use `git worktree prune` for stale records that Git already marks prunable. Do not delete a live worktree directory until its branch state and uncommitted files have been checked.
 
 ## First Plugin Direction
 
@@ -153,8 +176,8 @@ See `doc/devdoc/kit-first-plugin.md` for the first-module checklist and validati
 Use this checklist when importing another upstream module:
 
 1. Copy the module source and keep its upstream project shape intact where possible.
-2. Add the module projects and required build dependencies to `PowerToys.slnx`.
-3. Add the module interface DLL to the runner `knownModules` list.
+2. Add the module projects and required build dependencies to `Kit.slnx`.
+3. Add the module interface DLL to the runner `KitKnownModules` list.
 4. Add Settings navigation, route mapping, page/view model inclusion, and GPO page mapping only for the imported module.
 5. Keep upstream CsWinRT references intact when the module uses `PowerToys.Interop` or `PowerToys.GPOWrapper`; build the module once from a clean Release tree to confirm the WinMD projections regenerate.
 6. Add Home dashboard metadata only when the module should appear on Home.
@@ -171,7 +194,7 @@ Local verification on 2026-04-25 used Visual Studio 18 MSBuild and VSTest. The f
 - `MonitorModuleInterface.vcxproj` Debug x64
 - `PowerToys.Settings.csproj` Debug x64
 - `PowerToys.QuickAccess.csproj` Debug x64
-- `runner.vcxproj` Debug x64
+- `Kit.vcxproj` Debug x64
 - `Awake.csproj` Debug x64
 - `AwakeModuleInterface.vcxproj` Debug x64
 - `LightSwitchModuleInterface.vcxproj` Debug x64
@@ -179,16 +202,23 @@ Local verification on 2026-04-25 used Visual Studio 18 MSBuild and VSTest. The f
 
 `Settings.UI.UnitTests.csproj` now builds cleanly after aligning the test project with Kit's trimmed module set and Kit settings path. `vstest.console.exe` passed `Settings.UI.UnitTests.dll` with 59/59 tests passing. `vstest.console.exe` also passed `Monitor.UnitTests.dll` with 13/13 tests passing, including static coverage for Monitor runner/solution registration and worker lifetime handling.
 
-After the Release runner build-dependency fix, the targeted `PowerToys.slnx /t:runner` Release x64 build passed and produced the runtime trio expected from a clean tree:
+After the Release runner build-dependency fix, the targeted `Kit.slnx /t:Kit` Release x64 build passed and produced the runtime trio expected from a clean tree:
 
 - `x64\Release\Kit.exe`
 - `x64\Release\WinUI3Apps\PowerToys.Settings.exe`
 - `x64\Release\WinUI3Apps\PowerToys.QuickAccess.exe`
 
-After the PowerToys CsWinRT/WinMD compatibility fix, a full `PowerToys.slnx` Release x64 build also passed locally and produced the copied-module metadata expected by Awake, Quick Access, Settings, DSC, and other PowerToys-derived surfaces:
+After the PowerToys CsWinRT/WinMD compatibility fix, a full `Kit.slnx` Release x64 build also passed locally and produced the copied-module metadata expected by Awake, Quick Access, Settings, DSC, and other PowerToys-derived surfaces:
 
 - `x64\Release\PowerToys.Interop.winmd`
 - `x64\Release\PowerToys.GPOWrapper.winmd`
 - regenerated CsWinRT projections such as `PowerToys.GPOWrapper.cs` in consuming project `obj` directories
+
+Local verification on 2026-04-29 covered the latest Monitor/Light Switch Settings pass:
+
+- `Settings.UI.UnitTests.csproj` Debug x64 built with Visual Studio 18 MSBuild.
+- `dotnet test Settings.UI.UnitTests.csproj -p:Platform=x64 -p:Configuration=Debug --no-build --filter "LightSwitchPowerDisplayIntegrationShouldFollowOriginalModuleContract|MonitorRunInBackgroundShouldBeImmediatelyAfterManualScan"` ran the Settings UI test assembly with 77/77 tests passing.
+- `PowerToys.Settings.csproj` Release x64 built successfully and regenerated `x64\Release\WinUI3Apps\PowerToys.Settings.dll`.
+- `git worktree prune` removed the stale external worktree metadata, and `git worktree list --porcelain` now reports only the current `C:\Users\Zen\Repo\Codes\Kit` worktree.
 
 Before handing a clean tree to Visual Studio, local build outputs and restore caches can be removed. The next compile should recreate the runtime output directory, the `WinUI3Apps` children, shared WinMD files, CsWinRT projections, and package restore cache together.
