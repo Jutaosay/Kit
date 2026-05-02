@@ -36,6 +36,37 @@
     <RemoveDir Directories="@(KitNonEnglishSatelliteDirectories)" Condition="'@(KitNonEnglishSatelliteDirectories)' != ''" />
   </Target>
 
+  <Target Name="KitRemoveStaticLibArtifactsFromRuntimeOutput"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectName)' == 'Kit' and '$(OutDir)' != ''">
+    <ItemGroup>
+      <KitStaticLibArtifacts Include="$(OutDir)**\*.lib;$(OutDir)**\*.exp;$(OutDir)**\*.lib.lastcodeanalysissucceeded" />
+    </ItemGroup>
+
+    <Delete Files="@(KitStaticLibArtifacts)" TreatErrorsAsWarnings="true" />
+  </Target>
+
+  <Target Name="KitRemoveInactiveModelProviderArtifactsFromRuntimeOutput"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectName)' == 'Kit' and '$(OutDir)' != ''">
+    <ItemGroup>
+      <KitInactiveModelProviderArtifacts Include="$(OutDir)**\Assets\Settings\Icons\Models\*.svg;$(OutDir)**\*Foundry*" />
+    </ItemGroup>
+
+    <Delete Files="@(KitInactiveModelProviderArtifacts)" TreatErrorsAsWarnings="true" />
+  </Target>
+
+  <Target Name="KitRemoveNonEnglishSatelliteDirsFromRuntimeOutput"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectName)' == 'Kit' and '$(OutDir)' != ''">
+    <ItemGroup>
+      <KitRuntimeNonEnglishSatelliteLanguage Include="af-ZA;am-ET;ar-SA;as-IN;az-Latn-AZ;bg-BG;bn-IN;bs-Latn-BA;ca-ES;ca-Es-VALENCIA;cs-CZ;cy-GB;da-DK;de-DE;el-GR;en-GB;es-ES;es-MX;et-EE;eu-ES;fa-IR;fi-FI;fil-PH;fr-CA;fr-FR;ga-IE;gd-gb;gl-ES;gu-IN;he-IL;hi-IN;hr-HR;hu-HU;hy-AM;id-ID;is-IS;it-IT;ja-JP;ka-GE;kk-KZ;km-KH;kn-IN;kok-IN;ko-KR;lb-LU;lo-LA;lt-LT;lv-LV;mi-NZ;mk-MK;ml-IN;mr-IN;ms-MY;mt-MT;nb-NO;ne-NP;nl-NL;nn-NO;or-IN;pa-IN;pl-PL;pt-BR;pt-PT;quz-PE;ro-RO;ru-RU;sk-SK;sl-SI;sq-AL;sr-Cyrl-BA;sr-Cyrl-RS;sr-Latn-RS;sv-SE;ta-IN;te-IN;th-TH;tr-TR;tt-RU;ug-CN;uk-UA;ur-PK;uz-Latn-UZ;vi-VN;zh-CN;zh-TW" />
+      <KitRuntimeNonEnglishSatelliteDirectories Include="@(KitRuntimeNonEnglishSatelliteLanguage->'$(OutDir)%(Identity)')" />
+    </ItemGroup>
+
+    <RemoveDir Directories="@(KitRuntimeNonEnglishSatelliteDirectories)" Condition="'@(KitRuntimeNonEnglishSatelliteDirectories)' != ''" />
+  </Target>
+
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release' and '$(MSBuildProjectExtension)' == '.vcxproj'">
     <ClCompile>
       <DebugInformationFormat>None</DebugInformationFormat>

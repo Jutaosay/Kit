@@ -10,7 +10,20 @@ Kit-specific changes should stay small and intentional: branding, settings stora
 
 ## Current Version
 
-Current Kit version: `1.0.2 beta1`.
+Current Kit version: `1.0.3`.
+
+## Changelog
+
+### 1.0.3
+
+- Release builds prune native link artifacts (`*.lib`, `*.exp`, and static-library analysis markers) from the runtime output after `Kit.exe` builds.
+- Release builds remove non-English runtime satellite folders and inactive AI model-provider artifacts from the active Kit output, matching the managed satellite trim.
+- Added `tools\build\clean-stale-versions.ps1` for explicit cleanup of old versioned output folders while preserving the active version, `Debug`, and `Release`.
+- Added `tools\build\verify-runtime-artifacts.ps1` to check versioned or `Release` outputs for link artifacts, PDBs, Foundry assets, and non-English locale folders.
+- Removed unused WPF/WinForms dependencies from `Common.UI` so Settings and Quick Access do not pull WPF runtime assemblies through that shared library.
+- Deleted inactive Settings module source/XAML files instead of keeping them hidden behind `Compile Remove` and `Page Remove` rules.
+- Trimmed inactive common, DSC, and unused Awake service projects from `Kit.slnx` while keeping `Common.Search` because Settings search still uses it.
+- Quick Access now opens a module's Settings page when a visible tile has no direct launcher action, including Monitor.
 
 ## Phase One Closeout
 
@@ -152,7 +165,7 @@ Recommended cleanup policy:
 - Before GitHub upload or archival, remove `src\kit\x64`, `src\kit\Debug`, `src\kit\Release`, `.vs`, `TestResults`, project `bin`/`obj` folders, and `src\kit\packages`.
 - During local iterative development, keep `src\kit\packages` if disk space allows. It prevents cold-build failures and slow restores caused by missing packages such as WIL and C++/WinRT.
 - If `packages` was removed, run Visual Studio `Restore NuGet Packages` or perform a full solution build before judging compile errors from missing headers or WinMD projections.
-- Release builds keep only `en-US` satellite resources, remove generated debug symbols from managed publish outputs, exclude inactive OOBE assets from the Settings publish, and no longer build the AdvancedPaste-only `LanguageModelProvider` dependency for the active Kit module set.
+- Release builds keep only `en-US` satellite resources, remove generated debug symbols and native link artifacts from runtime outputs, exclude inactive OOBE and AI model assets from the Settings publish, and no longer build the AdvancedPaste-only `LanguageModelProvider` dependency for the active Kit module set.
 - WindowsAppSDK 1.8 still contributes its own Windows AI/Onnx runtime files through the `Microsoft.WindowsAppSDK` meta-package. Removing those would require replacing the meta-package with granular WindowsAppSDK package references, so it is deferred until Settings compatibility can be validated more broadly.
 
 After source-size cleanup, `src\kit` should look close to source-only size: source and docs remain, while `x64`, `Release`, `.vs`, `packages`, and project `bin`/`obj` directories should be absent until the next restore/build.

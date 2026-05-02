@@ -4,7 +4,6 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/common/">
-    <Project Path="src/common/CalculatorEngineCommon/CalculatorEngineCommon.vcxproj" Id="2cf78cf7-8feb-4be1-9591-55fa25b48fc6" />
     <Project Path="src/common/Common.Search/Common.Search.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -19,10 +18,6 @@
     </Project>
     <Project Path="src/common/COMUtils/COMUtils.vcxproj" Id="7319089e-46d6-4400-bc65-e39bdf1416ee" />
     <Project Path="src/common/Display/Display.vcxproj" Id="caba8dfb-823b-4bf2-93ac-3f31984150d9" />
-    <Project Path="src/common/FilePreviewCommon/FilePreviewCommon.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
     <Project Path="src/common/GPOWrapper/GPOWrapper.vcxproj" Id="e599c30b-9dc8-4e5a-bf27-93d4ccede788" />
     <Project Path="src/common/GPOWrapperProjection/GPOWrapperProjection.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
@@ -40,16 +35,8 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
     </Project>
-    <Project Path="src/common/PowerToys.ModuleContracts/PowerToys.ModuleContracts.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
     <Project Path="src/common/SettingsAPI/SettingsAPI.vcxproj" Id="6955446d-23f7-4023-9bb3-8657f904af99" />
     <Project Path="src/common/Themes/Themes.vcxproj" Id="98537082-0fdb-40de-abd8-0dc5a4269bab" />
-    <Project Path="src/common/UITestAutomation/UITestAutomation.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
     <Project Path="src/common/UnitTests-CommonLib/UnitTests-CommonLib.vcxproj" Id="1a066c63-64b3-45f8-92fe-664e1cce8077" />
     <Project Path="src/common/UnitTests-CommonUtils/UnitTests-CommonUtils.vcxproj" Id="8b5cfb38-ccba-40a8-ad7a-89c57b070884" />
     <Project Path="src/common/version/version.vcxproj" Id="cc6e41ac-8174-4e8a-8d22-85dd7f4851df" />
@@ -115,23 +102,6 @@
     <File Path="src/common/utils/winapi_error.h" />
     <File Path="src/common/utils/window.h" />
   </Folder>
-  <Folder Name="/DSC/">
-    <Project Path="src/dsc/PowerToys.Settings.DSC.Schema.Generator/PowerToys.Settings.DSC.Schema.Generator.csproj">
-      <BuildDependency Project="src/settings-ui/Settings.UI/PowerToys.Settings.csproj" />
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
-  </Folder>
-  <Folder Name="/DSC/v3/">
-    <Project Path="src/dsc/v3/PowerToys.DSC.UnitTests/PowerToys.DSC.UnitTests.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
-    <Project Path="src/dsc/v3/PowerToys.DSC/PowerToys.DSC.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
-  </Folder>
   <Folder Name="/modules/" />
   <Folder Name="/modules/interface/">
     <File Path="src/modules/interface/powertoy_module_interface.h" />
@@ -166,10 +136,6 @@
     </Project>
   </Folder>
   <Folder Name="/modules/awake/">
-    <Project Path="src/modules/awake/Awake.ModuleServices/Awake.ModuleServices.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-    </Project>
     <Project Path="src/modules/awake/Awake/Awake.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
